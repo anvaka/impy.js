@@ -27,12 +27,14 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             // moduleDef.code = jsFile;
             return moduleDef;
         },
-        codePrinted = false, 
+        codePrinted = false,
         invoke = function (moduleDef, fileName) {
             var code = [],
                 compiledCode,
                 exports = moduleDef.exports,
-                namespace = moduleDef.getNamespace();
+                expressionName = '',
+                namespace = moduleDef.getNamespace(),
+                argSep = namespace ? ', ' : '';
 
             if (!utils.isNamespaceRegistered(namespace)) {
                 utils.registerNamespace(namespace);
@@ -42,21 +44,35 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             }
             if (!codePrinted) {
 
-                if (env.onlyPrint) { code.push('// import ' + fileName); }
-                code.push('(function (' + namespace + ') {');
+                if (env.debugerName) {
+                    // TODO: should be just a file name!
+                    // expressionName = fileName + '_js';
+                }
+                if (env.onlyPrint) {
+                    code.push('// import ' + fileName);
+                    code.push('(function ' + expressionName +'(' + namespace + ') {');
+                } else {
+                    // we need to provide a runtime's global variable to comply with compiled api:
+                    code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
+                }
+                
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
                     if (namespace) {
                         var exportName = exports[i].exportDeclaration;
-                        code.push(namespace + '.' + exportName + ' = ' + 
+                        code.push(namespace + '.' + exportName + ' = ' +
                                   exportName + '; // export ' + exportName);
                     } else {
                         // todo: global?
                         console.log('Global exports are not implemented');
                     }
                 }
-                code.push('}(' + namespace + '));');
+                if (env.onlyPrint) {
+                    code.push('}(' + namespace + '));');
+                } else {
+                    code.push('}(' + namespace + argSep + env.global + '));');
+                }
 
                 compiledCode = code.join('\n');
                 codePrinted = true;
@@ -73,7 +89,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     /*@if (@_jscript) @else @*/
                     compiledCode += '\n//@ sourceURL=' + fileName;
                     /*@end@*/
-                    (function(){(0, eval)(compiledCode);}());
+                    (function(){ (0, eval)(compiledCode); }());
                 }
             }
         },

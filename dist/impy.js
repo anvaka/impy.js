@@ -1,5 +1,5 @@
-(function (global) {
 
+(function (global) {
 var impyjs = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
@@ -8,24 +8,6 @@ var impyjs = {};
 var version = '0.0.1';
 impyjs.version = version; // export version
 }(impyjs));
-var utils = {};
-
-// import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
-(function (utils) {
-
-
-function printCode(env, topNamespace) {
-    if (env.onlyPrint) {
-        // wrap top module into its own block:
-        env.executedCode.unshift('');
-        env.executedCode.unshift('(function (global) {');
-        env.executedCode.push('})(this);')
-
-        console.log(env.executedCode.join('\n'));
-    }
-}
-utils.printCode = printCode; // export printCode
-}(utils));
 var browser = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/path.js
@@ -67,6 +49,23 @@ var path = {
 };
 browser.path = path; // export path
 }(browser));
+var utils = {};
+
+// import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
+(function (utils) {
+
+
+function printCode(env, topNamespace) {
+    if (env.onlyPrint) {
+        // wrap top module into its own block to export module's public api:
+        env.executedCode.unshift('','(function (global) {');
+        env.executedCode.push('', '}).call(this, (typeof module !== "undefined" && module.exports) || window);');
+
+        console.log(env.executedCode.join('\n'));
+    }
+}
+utils.printCode = printCode; // export printCode
+}(utils));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/namespace.js
 (function (utils) {
 
@@ -139,7 +138,7 @@ function ModuleDef() {
     this.resolveImports = function (callback) {
         var imports = self.imports,
             importsToResolve = imports.length,
-            loader, i
+            loader, i,
             loaderReady = function () {
                 importsToResolve -= 1;
                 if (importsToResolve === 0) {
@@ -202,12 +201,14 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             // moduleDef.code = jsFile;
             return moduleDef;
         },
-        codePrinted = false, 
+        codePrinted = false,
         invoke = function (moduleDef, fileName) {
             var code = [],
                 compiledCode,
                 exports = moduleDef.exports,
-                namespace = moduleDef.getNamespace();
+                expressionName = '',
+                namespace = moduleDef.getNamespace(),
+                argSep = namespace ? ', ' : '';
 
             if (!utils.isNamespaceRegistered(namespace)) {
                 utils.registerNamespace(namespace);
@@ -217,21 +218,35 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             }
             if (!codePrinted) {
 
-                if (env.onlyPrint) { code.push('// import ' + fileName); }
-                code.push('(function (' + namespace + ') {');
+                if (env.debugerName) {
+                    // TODO: should be just a file name!
+                    // expressionName = fileName + '_js';
+                }
+                if (env.onlyPrint) {
+                    code.push('// import ' + fileName);
+                    code.push('(function ' + expressionName +'(' + namespace + ') {');
+                } else {
+                    // we need to provide a runtime's global variable to comply with compiled api:
+                    code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
+                }
+                
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
                     if (namespace) {
                         var exportName = exports[i].exportDeclaration;
-                        code.push(namespace + '.' + exportName + ' = ' + 
+                        code.push(namespace + '.' + exportName + ' = ' +
                                   exportName + '; // export ' + exportName);
                     } else {
                         // todo: global?
                         console.log('Global exports are not implemented');
                     }
                 }
-                code.push('}(' + namespace + '));');
+                if (env.onlyPrint) {
+                    code.push('}(' + namespace + '));');
+                } else {
+                    code.push('}(' + namespace + argSep + env.global + '));');
+                }
 
                 compiledCode = code.join('\n');
                 codePrinted = true;
@@ -248,7 +263,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     /*@if (@_jscript) @else @*/
                     compiledCode += '\n//@ sourceURL=' + fileName;
                     /*@end@*/
-                    (function(){(0, eval)(compiledCode);}());
+                    (function(){ (0, eval)(compiledCode); }());
                 }
             }
         },
@@ -326,7 +341,7 @@ var getEntryPoint = function (env) {
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
         
         basePath = env.path.dirname(basePath);
-        return env.path.resolve(basePath, entryPoint);
+        return entryPoint ? env.path.resolve(basePath, entryPoint) : null;
     },
  
     getSource = function (location, callback) {
@@ -350,18 +365,24 @@ var getEntryPoint = function (env) {
         r.send();
     };
 
-function run (env) {
+function prepareExports (env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
     env.getSource = getSource;
+    env.global = 'window';
 
-    var loader = utils.resolveLoader('', env.entryPoint, env);
-    loader.load(function() {
-        var topModule = loader.getDefinition();
-        utils.printCode(env, topModule.namespace);
-    });
+    return {
+        load : function(file, loadedCallback) {
+            var loader = utils.resolveLoader('', file, env);
+            loader.load(function() {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
+    };
 }
-browser.run = run; // export run
+browser.prepareExports = prepareExports; // export prepareExports
 }(browser));
 var node = {};
 
@@ -372,7 +393,7 @@ var node = {};
 var getSource = function (location, callback) {
         var fs = require('fs');
         fs.readFile(location, 'utf8', function(err, data) {
-            if (err) { 
+            if (err) {
                 console.error('Could not read ' + location +'. Make sure the file exists.');
                 throw err;
             }
@@ -380,42 +401,53 @@ var getSource = function (location, callback) {
         });
     };
 
-function run(env) {
+function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
 
-    exports.load = function(file) {
-        env.entryPoint = env.path.resolve(file);
-        var currentDir = process.cwd();
-        
-        var loader = utils.resolveLoader(currentDir, file, env);
-        loader.load(function () {
-            var topModule = loader.getDefinition();
-            utils.printCode(env, topModule.namespace);
-        });
-    }
+    return {
+        load : function (file, loadedCallback) {
+            env.entryPoint = env.path.resolve(file);
+            env.global = 'module.exports';
+
+            var currentDir = process.cwd();
+            
+            var loader = utils.resolveLoader(currentDir, file, env);
+            loader.load(function () {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
+    };
 }
-node.run = run; // export run
+node.prepareExports = prepareExports; // export prepareExports
 }(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/main.js
-(function (impyjs) {
+(function () {
 
 
 var env = {
-    isNode: (typeof process !== 'undefined'),
-    executedCode: [],
-    onlyPrint: true
-};
+        isNode: (typeof process !== 'undefined'),
+        onlyPrint: true,  // a switch: print program or run it?
+        executedCode: [], // if only print - this will hold program's code
+        debugerName: true // all IIFEs will get a debugger friendly name
+    },
+    impyAPI;
 
 if (env.isNode) {
-    node.run(env);
+    impyAPI = node.prepareExports(env);
 } else {
-    env.onlyPrint = false; // run the code, do not print it.
-    loader = browser.run(env);
+    env.onlyPrint = false; // just for test: run the code, do not print it.
+    impyAPI = browser.prepareExports(env);
 }
 
-// TODO: I still need to work on global module exports.
-// this is not really good and will not work in node.
-global.impyjs = impyjs;
-}(impyjs));
-})(this);
+if (env.entryPoint) { // load the first script, if environment has it.
+    impyAPI.load(env.entryPoint);
+}
+
+// TODO: I'm still playing with library exports. This part may be changed
+global.impyjs = impyAPI;
+}());
+
+}).call(this, (typeof module !== "undefined" && module.exports) || window);

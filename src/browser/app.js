@@ -11,7 +11,7 @@ var getEntryPoint = function (env) {
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
         
         basePath = env.path.dirname(basePath);
-        return env.path.resolve(basePath, entryPoint);
+        return entryPoint ? env.path.resolve(basePath, entryPoint) : null;
     },
  
     getSource = function (location, callback) {
@@ -35,16 +35,22 @@ var getEntryPoint = function (env) {
         r.send();
     };
 
-function run (env) {
+function prepareExports (env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
     env.getSource = getSource;
+    env.global = 'window';
 
-    var loader = utils.resolveLoader('', env.entryPoint, env);
-    loader.load(function() {
-        var topModule = loader.getDefinition();
-        utils.printCode(env, topModule.namespace);
-    });
+    return {
+        load : function(file, loadedCallback) {
+            var loader = utils.resolveLoader('', file, env);
+            loader.load(function() {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
+    };
 }
     
-/* export run */
+/* export prepareExports */

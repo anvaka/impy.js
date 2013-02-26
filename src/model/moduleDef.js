@@ -12,7 +12,7 @@ function ModuleDef() {
     this.resolveImports = function (callback) {
         var imports = self.imports,
             importsToResolve = imports.length,
-            loader, i
+            loader, i,
             loaderReady = function () {
                 importsToResolve -= 1;
                 if (importsToResolve === 0) {

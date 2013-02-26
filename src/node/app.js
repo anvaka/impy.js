@@ -5,7 +5,7 @@
 var getSource = function (location, callback) {
         var fs = require('fs');
         fs.readFile(location, 'utf8', function(err, data) {
-            if (err) { 
+            if (err) {
                 console.error('Could not read ' + location +'. Make sure the file exists.');
                 throw err;
             }
@@ -13,20 +13,25 @@ var getSource = function (location, callback) {
         });
     };
 
-function run(env) {
+function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
 
-    exports.load = function(file) {
-        env.entryPoint = env.path.resolve(file);
-        var currentDir = process.cwd();
-        
-        var loader = utils.resolveLoader(currentDir, file, env);
-        loader.load(function () {
-            var topModule = loader.getDefinition();
-            utils.printCode(env, topModule.namespace);
-        });
-    }
+    return {
+        load : function (file, loadedCallback) {
+            env.entryPoint = env.path.resolve(file);
+            env.global = 'module.exports';
+
+            var currentDir = process.cwd();
+            
+            var loader = utils.resolveLoader(currentDir, file, env);
+            loader.load(function () {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
+    };
 }
 
-/* export run */
+/* export prepareExports */
