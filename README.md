@@ -1,7 +1,7 @@
 impy.js
 =======
 
-I've been doing JavaScript development for a little over a year now, and I'm disappointed by lack of modules support in JS world. This is my attempt to make development of my next application fast and easy.
+I've been doing JavaScript development for a little over a year now, and I'm disappointed by lack of modules support in JS world (and I do not mean AMD or CJS). This is my attempt to make development of my next application fast and easy.
 
 Example
 -------
