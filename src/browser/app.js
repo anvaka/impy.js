@@ -9,11 +9,11 @@ var getEntryPoint = function (env) {
             entryPoint = allScripts[allScripts.length - 1].getAttribute('data-main'),
             port = window.location.port ? ':' + window.location.port : '',
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
-        
+
         basePath = env.path.dirname(basePath);
         return entryPoint ? env.path.resolve(basePath, entryPoint) : null;
     },
- 
+
     getSource = function (location, callback) {
         var r = new XMLHttpRequest(),
             transferComplete = function (e) {
@@ -42,8 +42,8 @@ function prepareExports (env) {
     env.global = 'window';
 
     return {
-        load : function(file, loadedCallback) {
-            var loader = utils.resolveLoader('', file, env);
+        load : function (file, loadedCallback) {
+            var loader = utils.resolveLoader(env.path.dirname(document.URL), file, env);
             loader.load(function() {
                 var topModule = loader.getDefinition();
                 utils.printCode(env, topModule.namespace);

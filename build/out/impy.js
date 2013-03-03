@@ -1,5 +1,5 @@
-(function (global) {
 
+(function (global) {
 var impyjs = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
@@ -16,10 +16,9 @@ var utils = {};
 
 function printCode(env, topNamespace) {
     if (env.onlyPrint) {
-        // wrap top module into its own block:
-        env.executedCode.unshift('');
-        env.executedCode.unshift('(function (global) {');
-        env.executedCode.push('})(this);')
+        // wrap top module into its own block to export module's public api:
+        env.executedCode.unshift('','(function (global) {');
+        env.executedCode.push('', '}).call(this, (typeof module !== "undefined" && module.exports) || window);');
 
         console.log(env.executedCode.join('\n'));
     }
@@ -30,40 +29,95 @@ var browser = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/path.js
 (function (browser) {
+/*jslint regexp: true sloppy: true white: true plusplus: true*/
 
-
-var separator = '/';
-
- // Split a filename into [root, dir, basename, ext], unix version
-// 'root' is just a slash, or nothing.
-var splitPathRe =
-    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-var splitPath = function(filename) {
-    return splitPathRe.exec(filename).slice(1);
-};
+var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
+    split = function (address) {
+        var match = address.match(re_porotocol_domain_path_args);
+        if (match) {
+            return {
+                domain: match[1] || '',
+                path: match[2] || '',
+                args: match[3] || ''
+            };
+        }
+        return {
+            domain: '',
+            path: '',
+            args: ''
+        };
+    };
 
 var path = {
-    dirname : function(path) {
-        var result = splitPath(path),
-            root = result[0],
-            dir = result[1];
-
-        if (!root && !dir) {
-            // No dirname whatsoever
-            return '.';
+    /**
+     * Based on a given web resource address returns a 'directory' name
+     * where resource is located.
+     */
+    dirname : function (path) {
+        if (!path) {
+            return '';
         }
-
-        if (dir) {
-            // It has a dirname, strip trailing slash
-            dir = dir.substr(0, dir.length - 1);
+        var parts = split(path),
+            lastSlash;
+        path = parts.path;
+        lastSlash = path.lastIndexOf('/');
+        if (lastSlash > 0) {
+            path = path.substr(0, lastSlash);
         }
-
-        return root + dir + '/';
+        if (lastSlash === 0) {
+            path = '';
+        }
+        return parts.domain + path + '/';
     },
+    /**
+     * Resolves to to an absolute path with a from as a current dir.
+     */
     resolve : function (from, to) {
-        // todo; need to fix this.
-        return from + to;
-    }
+        if (!to) {
+            return from;
+        }
+        if (to.indexOf('//') !== -1) {
+            return to; // assume it's a uri.
+        }
+
+        var parts = to.split('/'),
+            base = split(from),
+            basePathRaw = base.path.split('/'),
+            basePath = [],
+            i, n, part;
+        for (i = 0, n = basePathRaw.length; i < n; ++i) {
+            if (basePathRaw[i]) {
+                basePath.push(basePathRaw[i]);
+            }
+        }
+        if (to[0] === '/') {
+            return this.root + to;
+        }
+        for(i = 0, n = parts.length; i < n; ++i) {
+            part = parts[i];
+            if (part === '..') {
+                if (basePath.length > 0) {
+                    basePath.pop();
+                } else {
+                    throw 'Error while resolving ' + from + '+' + to + ': Relative path is out of the site root folder';
+                }
+            } else if (part !== '.') {
+                basePath.push(part);
+            }
+        }
+        
+        return base.domain + '/' + basePath.join('/');
+    },
+
+    /**
+     * Returns the last portion of a path.
+     */
+    basename: function (address) {
+        var path = split(address).path;
+        return path.substr(path.lastIndexOf('/') + 1);
+    },
+
+    root : ''
 };
 browser.path = path; // export path
 }(browser));
@@ -139,7 +193,7 @@ function ModuleDef() {
     this.resolveImports = function (callback) {
         var imports = self.imports,
             importsToResolve = imports.length,
-            loader, i
+            loader, i,
             loaderReady = function () {
                 importsToResolve -= 1;
                 if (importsToResolve === 0) {
@@ -202,12 +256,14 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             // moduleDef.code = jsFile;
             return moduleDef;
         },
-        codePrinted = false, 
+        codePrinted = false,
         invoke = function (moduleDef, fileName) {
             var code = [],
                 compiledCode,
                 exports = moduleDef.exports,
-                namespace = moduleDef.getNamespace();
+                expressionName = '',
+                namespace = moduleDef.getNamespace(),
+                argSep = namespace ? ', ' : '';
 
             if (!utils.isNamespaceRegistered(namespace)) {
                 utils.registerNamespace(namespace);
@@ -217,21 +273,35 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             }
             if (!codePrinted) {
 
-                if (env.onlyPrint) { code.push('// import ' + fileName); }
-                code.push('(function (' + namespace + ') {');
+                if (env.debugerName) {
+                    // TODO: should be just a file name!
+                    // expressionName = fileName + '_js';
+                }
+                if (env.onlyPrint) {
+                    code.push('// import ' + fileName);
+                    code.push('(function ' + expressionName +'(' + namespace + ') {');
+                } else {
+                    // we need to provide a runtime's global variable to comply with compiled api:
+                    code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
+                }
+                
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
                     if (namespace) {
                         var exportName = exports[i].exportDeclaration;
-                        code.push(namespace + '.' + exportName + ' = ' + 
+                        code.push(namespace + '.' + exportName + ' = ' +
                                   exportName + '; // export ' + exportName);
                     } else {
                         // todo: global?
                         console.log('Global exports are not implemented');
                     }
                 }
-                code.push('}(' + namespace + '));');
+                if (env.onlyPrint) {
+                    code.push('}(' + namespace + '));');
+                } else {
+                    code.push('}(' + namespace + argSep + env.global + '));');
+                }
 
                 compiledCode = code.join('\n');
                 codePrinted = true;
@@ -248,7 +318,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     /*@if (@_jscript) @else @*/
                     compiledCode += '\n//@ sourceURL=' + fileName;
                     /*@end@*/
-                    (function(){(0, eval)(compiledCode);}());
+                    (function(){ (0, eval)(compiledCode); }());
                 }
             }
         },
@@ -315,6 +385,45 @@ function resolveLoader(currentDir, importPath, env) {
 }
 utils.resolveLoader = resolveLoader; // export resolveLoader
 }(utils));
+var node = {};
+
+// import /Users/anvaka/Documents/projects/impyjs/src/node/app.js
+(function (node) {
+
+
+var getSource = function (location, callback) {
+        var fs = require('fs');
+        fs.readFile(location, 'utf8', function(err, data) {
+            if (err) {
+                console.error('Could not read ' + location +'. Make sure the file exists.');
+                throw err;
+            }
+            callback(data);
+        });
+    };
+
+function prepareExports(env) {
+    env.getSource = getSource;
+    env.path = require('path');
+
+    return {
+        load : function (file, loadedCallback) {
+            env.entryPoint = env.path.resolve(file);
+            env.global = 'module.exports';
+
+            var currentDir = process.cwd();
+            
+            var loader = utils.resolveLoader(currentDir, file, env);
+            loader.load(function () {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
+    };
+}
+node.prepareExports = prepareExports; // export prepareExports
+}(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/app.js
 (function (browser) {
 
@@ -324,11 +433,11 @@ var getEntryPoint = function (env) {
             entryPoint = allScripts[allScripts.length - 1].getAttribute('data-main'),
             port = window.location.port ? ':' + window.location.port : '',
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
-        
+
         basePath = env.path.dirname(basePath);
-        return env.path.resolve(basePath, entryPoint);
+        return entryPoint ? env.path.resolve(basePath, entryPoint) : null;
     },
- 
+
     getSource = function (location, callback) {
         var r = new XMLHttpRequest(),
             transferComplete = function (e) {
@@ -350,72 +459,50 @@ var getEntryPoint = function (env) {
         r.send();
     };
 
-function run (env) {
+function prepareExports (env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
     env.getSource = getSource;
+    env.global = 'window';
 
-    var loader = utils.resolveLoader('', env.entryPoint, env);
-    loader.load(function() {
-        var topModule = loader.getDefinition();
-        utils.printCode(env, topModule.namespace);
-    });
-}
-browser.run = run; // export run
-}(browser));
-var node = {};
-
-// import /Users/anvaka/Documents/projects/impyjs/src/node/app.js
-(function (node) {
-
-
-var getSource = function (location, callback) {
-        var fs = require('fs');
-        fs.readFile(location, 'utf8', function(err, data) {
-            if (err) { 
-                console.error('Could not read ' + location +'. Make sure the file exists.');
-                throw err;
-            }
-            callback(data);
-        });
+    return {
+        load : function (file, loadedCallback) {
+            var loader = utils.resolveLoader(env.path.dirname(document.URL), file, env);
+            loader.load(function() {
+                var topModule = loader.getDefinition();
+                utils.printCode(env, topModule.namespace);
+                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+            });
+        }
     };
-
-function run(env) {
-    env.getSource = getSource;
-    env.path = require('path');
-
-    exports.load = function(file) {
-        env.entryPoint = env.path.resolve(file);
-        var currentDir = process.cwd();
-        
-        var loader = utils.resolveLoader(currentDir, file, env);
-        loader.load(function () {
-            var topModule = loader.getDefinition();
-            utils.printCode(env, topModule.namespace);
-        });
-    }
 }
-node.run = run; // export run
-}(node));
+browser.prepareExports = prepareExports; // export prepareExports
+}(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/main.js
-(function (impyjs) {
+(function () {
 
 
 var env = {
-    isNode: (typeof process !== 'undefined'),
-    executedCode: [],
-    onlyPrint: true
-};
+        isNode: (typeof process !== 'undefined'),
+        onlyPrint: true,  // a switch: print program or run it?
+        executedCode: [], // if only print - this will hold program's code
+        debugerName: true // all IIFEs will get a debugger friendly name
+    },
+    impyAPI;
 
 if (env.isNode) {
-    node.run(env);
+    impyAPI = node.prepareExports(env);
 } else {
-    env.onlyPrint = false; // run the code, do not print it.
-    loader = browser.run(env);
+    env.onlyPrint = false; // just for test: run the code, do not print it.
+    impyAPI = browser.prepareExports(env);
 }
 
-// TODO: I still need to work on global module exports.
-// this is not really good and will not work in node.
-global.impyjs = impyjs;
-}(impyjs));
-})(this);
+if (env.entryPoint) { // load the first script, if environment has it.
+    impyAPI.load(env.entryPoint);
+}
+
+// TODO: I'm still playing with library exports. This part may be changed
+global.impyjs = impyAPI;
+}());
+
+}).call(this, (typeof module !== "undefined" && module.exports) || window);
