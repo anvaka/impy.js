@@ -3,7 +3,7 @@
 var impyjs = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
-(function (impyjs) {
+(function version_js(impyjs) {
 
 var version = '0.0.1';
 impyjs.version = version; // export version
@@ -11,7 +11,7 @@ impyjs.version = version; // export version
 var utils = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
-(function (utils) {
+(function printer_js(utils) {
 
 
 function printCode(env, topNamespace) {
@@ -28,7 +28,7 @@ utils.printCode = printCode; // export printCode
 var browser = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/path.js
-(function (browser) {
+(function path_js(browser) {
 /*jslint regexp: true sloppy: true white: true plusplus: true*/
 
 var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
@@ -122,7 +122,7 @@ var path = {
 browser.path = path; // export path
 }(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/namespace.js
-(function (utils) {
+(function namespace_js(utils) {
 
 
 var registeredNamespaces = {};
@@ -142,8 +142,18 @@ utils.registerNamespace = registerNamespace; // export registerNamespace
 }(utils));
 var model = {};
 
+// import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
+(function exportDef_js(model) {
+
+
+function ExportDef(exportDeclaration) {
+    // todo: validate
+    this.exportDeclaration = exportDeclaration;
+}
+model.ExportDef = ExportDef; // export ExportDef
+}(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/importDef.js
-(function (model) {
+(function importDef_js(model) {
 
 
 /* Represents an import statment */
@@ -170,18 +180,8 @@ function ImportDef(importDeclaration) {
 }
 model.ImportDef = ImportDef; // export ImportDef
 }(model));
-// import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
-(function (model) {
-
-
-function ExportDef(exportDeclaration) {
-    // todo: validate
-    this.exportDeclaration = exportDeclaration;
-}
-model.ExportDef = ExportDef; // export ExportDef
-}(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/moduleDef.js
-(function (model) {
+(function moduleDef_js(model) {
 
 
 function ModuleDef() {
@@ -229,7 +229,7 @@ model.ModuleDef = ModuleDef; // export ModuleDef
 var loaders = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/loaders/defaultLoader.js
-(function (loaders) {
+(function defaultLoader_js(loaders) {
 
 
 function DefaultLoader(resourceLocation, env, resolveLoader) {
@@ -241,8 +241,6 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             //while(match = re.exec(jsFile)) {
             moduleDef.code = jsFile.replace(re, function(match, declarationType, declaration, pos) {
-                // console.dir(arguments);
-                // declarationType = match[1];
                 if (declarationType === 'import') {
                     moduleDef.addImportDef(declaration)
                 } else if (declarationType === 'export') {
@@ -274,8 +272,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             if (!codePrinted) {
 
                 if (env.debugerName) {
-                    // TODO: should be just a file name!
-                    // expressionName = fileName + '_js';
+                    expressionName = env.path.basename(fileName).replace(/[\/\\\.]/, '_');
                 }
                 if (env.onlyPrint) {
                     code.push('// import ' + fileName);
@@ -284,7 +281,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     // we need to provide a runtime's global variable to comply with compiled api:
                     code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
                 }
-                
+
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
@@ -318,7 +315,20 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     /*@if (@_jscript) @else @*/
                     compiledCode += '\n//@ sourceURL=' + fileName;
                     /*@end@*/
-                    (function(){ (0, eval)(compiledCode); }());
+                    try {
+                        (function codeRunner(){ (0, eval)(compiledCode); }());
+                    } catch(e) {
+                        var errorName = ('name' in e ? e.name : 'Error'),
+                            debugMessage = errorName + ' occured in "' + fileName + '"';
+                        if ('lineNumber' in e) {
+                            debugMessage += ':' + e.lineNumber;
+                        }
+                        if ('message' in e) {
+                            debugMessage += ': ' + e.message;
+                        }
+                        console.error(debugMessage);
+                        throw e;
+                    }
                 }
             }
         },
@@ -337,7 +347,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             moduleDefinition = moduleDef; // store to let other read info about this module
 
-            moduleDef.resolveImports(function () {
+            moduleDef.resolveImports(function onImportsResolved() {
                 invoke(moduleDef, resourceLocation);
                 callback();
             });
@@ -349,15 +359,15 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
     var that = this;
     this.load = function (loadedCallback) {
         if (this.isReady) {
-            loadedCallback();
-            return true;
-        } 
-        env.getSource(resourceLocation, function (source) {
-            loadModule(source, function() {
-                that.isReady = true;
-                if (loadedCallback) { loadedCallback(that);}
+            setTimeout(function onTransferCompleted () { loadedCallback(that); }, 0);
+        } else {
+            env.getSource(resourceLocation, function onTransferCompleted(source) {
+                loadModule(source, function() {
+                    that.isReady = true;
+                    if (loadedCallback) { loadedCallback(that);}
+                });
             });
-        });
+        }
     };
 
     this.getDefinition = function () {
@@ -370,7 +380,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 loaders.DefaultLoader = DefaultLoader; // export DefaultLoader
 }(loaders));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/resolver.js
-(function (utils) {
+(function resolver_js(utils) {
 
 
 var resolvedLoaders = {};
@@ -388,7 +398,7 @@ utils.resolveLoader = resolveLoader; // export resolveLoader
 var node = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/node/app.js
-(function (node) {
+(function app_js(node) {
 
 
 var getSource = function (location, callback) {
@@ -425,7 +435,7 @@ function prepareExports(env) {
 node.prepareExports = prepareExports; // export prepareExports
 }(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/app.js
-(function (browser) {
+(function app_js(browser) {
 
 
 var getEntryPoint = function (env) {
@@ -479,7 +489,7 @@ function prepareExports (env) {
 browser.prepareExports = prepareExports; // export prepareExports
 }(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/main.js
-(function () {
+(function main_js() {
 
 
 var env = {

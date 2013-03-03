@@ -12,8 +12,6 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             //while(match = re.exec(jsFile)) {
             moduleDef.code = jsFile.replace(re, function(match, declarationType, declaration, pos) {
-                // console.dir(arguments);
-                // declarationType = match[1];
                 if (declarationType === 'import') {
                     moduleDef.addImportDef(declaration)
                 } else if (declarationType === 'export') {
@@ -45,8 +43,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
             if (!codePrinted) {
 
                 if (env.debugerName) {
-                    // TODO: should be just a file name!
-                    // expressionName = fileName + '_js';
+                    expressionName = env.path.basename(fileName).replace(/[\/\\\.]/, '_');
                 }
                 if (env.onlyPrint) {
                     code.push('// import ' + fileName);
@@ -89,7 +86,20 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     /*@if (@_jscript) @else @*/
                     compiledCode += '\n//@ sourceURL=' + fileName;
                     /*@end@*/
-                    (function(){ (0, eval)(compiledCode); }());
+                    try {
+                        (function codeRunner(){ (0, eval)(compiledCode); }());
+                    } catch(e) {
+                        var errorName = ('name' in e ? e.name : 'Error'),
+                            debugMessage = errorName + ' occured in "' + fileName + '"';
+                        if ('lineNumber' in e) {
+                            debugMessage += ':' + e.lineNumber;
+                        }
+                        if ('message' in e) {
+                            debugMessage += ': ' + e.message;
+                        }
+                        console.error(debugMessage);
+                        throw e;
+                    }
                 }
             }
         },
@@ -108,7 +118,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             moduleDefinition = moduleDef; // store to let other read info about this module
 
-            moduleDef.resolveImports(function () {
+            moduleDef.resolveImports(function onImportsResolved() {
                 invoke(moduleDef, resourceLocation);
                 callback();
             });
@@ -120,9 +130,9 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
     var that = this;
     this.load = function (loadedCallback) {
         if (this.isReady) {
-            setTimeout(function() { loadedCallback(that); }, 0);
+            setTimeout(function onTransferCompleted () { loadedCallback(that); }, 0);
         } else {
-            env.getSource(resourceLocation, function (source) {
+            env.getSource(resourceLocation, function onTransferCompleted(source) {
                 loadModule(source, function() {
                     that.isReady = true;
                     if (loadedCallback) { loadedCallback(that);}
