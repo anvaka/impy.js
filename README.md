@@ -60,6 +60,7 @@ When you open this page in the browser impy resolves all dependencies and execut
 ```
 
 It will also load each file in your developer tools as a separate resource, so you are never lost in the 80,000 lines of combined code.
+![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
 
 You can also direct impy.js to compile the code starting from the given file. Once your code is compiled there are no traces of impy at all. Leaving only your code and 0 bytes of extra-dependencies in the runtime.
 
