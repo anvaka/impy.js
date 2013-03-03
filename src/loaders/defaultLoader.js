@@ -55,7 +55,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     // we need to provide a runtime's global variable to comply with compiled api:
                     code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
                 }
-                
+
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
@@ -120,15 +120,15 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
     var that = this;
     this.load = function (loadedCallback) {
         if (this.isReady) {
-            loadedCallback();
-            return true;
-        } 
-        env.getSource(resourceLocation, function (source) {
-            loadModule(source, function() {
-                that.isReady = true;
-                if (loadedCallback) { loadedCallback(that);}
+            setTimeout(function() { loadedCallback(that); }, 0);
+        } else {
+            env.getSource(resourceLocation, function (source) {
+                loadModule(source, function() {
+                    that.isReady = true;
+                    if (loadedCallback) { loadedCallback(that);}
+                });
             });
-        });
+        }
     };
 
     this.getDefinition = function () {
