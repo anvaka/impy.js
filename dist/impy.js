@@ -5,7 +5,7 @@ var impyjs = {};
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
 (function version_js(impyjs) {
 
-var version = '0.0.1';
+var version = '0.0.1.1';
 impyjs.version = version; // export version
 }(impyjs));
 var utils = {};
@@ -123,22 +123,32 @@ browser.path = path; // export path
 }(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/namespace.js
 (function namespace_js(utils) {
+/*jslint sloppy: true*/
 
-
-var registeredNamespaces = {};
-
+var registeredNamespaces = {},
+    moduleGlobalNamespaceName = '__moduleGlobals';
 function isNamespaceRegistered(namespace) {
     if (namespace) {
         return registeredNamespaces.hasOwnProperty(namespace);
     }
     return true; // global namespace
 }
-
 function registerNamespace(namespace) {
     registeredNamespaces[namespace] = true;
 }
+function isModuleGlobalRegisterd() {
+    return isNamespaceRegistered(moduleGlobalNamespaceName);
+}
+function prepareModuleGlobalNamespace() {
+    if (!isNamespaceRegistered(moduleGlobalNamespaceName)) {
+        registerNamespace(moduleGlobalNamespaceName);
+    }
+    return moduleGlobalNamespaceName;
+}
 utils.isNamespaceRegistered = isNamespaceRegistered; // export isNamespaceRegistered
 utils.registerNamespace = registerNamespace; // export registerNamespace
+utils.isModuleGlobalRegisterd = isModuleGlobalRegisterd; // export isModuleGlobalRegisterd
+utils.prepareModuleGlobalNamespace = prepareModuleGlobalNamespace; // export prepareModuleGlobalNamespace
 }(utils));
 var model = {};
 
@@ -223,6 +233,9 @@ function ModuleDef() {
     this.getNamespace = function () { 
         return this.namepsace || ''; // TODO: global?
     }
+    this.hasModuleGlobalExports = function() {
+        return this.exports.length && !this.namepsace;
+    }
 }
 model.ModuleDef = ModuleDef; // export ModuleDef
 }(model));
@@ -257,6 +270,8 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
         codePrinted = false,
         invoke = function (moduleDef, fileName) {
             var code = [],
+                codePostfix = [],
+                moduleGlobalNamespaceName,
                 compiledCode,
                 exports = moduleDef.exports,
                 expressionName = '',
@@ -265,9 +280,17 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             if (!utils.isNamespaceRegistered(namespace)) {
                 utils.registerNamespace(namespace);
-                // should go in global scope. Dots should be resolved.
+                // should go in global scope. TODO: Dots should be resolved.
                 code.push('var ' + namespace + ' = {};');
                 code.push('');
+            }
+            if (moduleDef.hasModuleGlobalExports()) {
+                if (!utils.isModuleGlobalRegisterd()) {
+                    moduleGlobalNamespaceName = utils.prepareModuleGlobalNamespace();
+                    code.push('var ' + moduleGlobalNamespaceName + ' = {};');
+                    code.push('');
+                }
+                moduleGlobalNamespaceName = utils.prepareModuleGlobalNamespace();
             }
             if (!codePrinted) {
 
@@ -276,22 +299,27 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 }
                 if (env.onlyPrint) {
                     code.push('// import ' + fileName);
-                    code.push('(function ' + expressionName +'(' + namespace + ') {');
+                    code.push('(function ' + expressionName + '(' + namespace + ') {');
                 } else {
                     // we need to provide a runtime's global variable to comply with compiled api:
-                    code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
+                    code.push('(function ' + expressionName + '(' + namespace + argSep + 'global) {');
                 }
 
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
+                    var exportName = exports[i].exportDeclaration;
                     if (namespace) {
-                        var exportName = exports[i].exportDeclaration;
                         code.push(namespace + '.' + exportName + ' = ' +
                                   exportName + '; // export ' + exportName);
                     } else {
-                        // todo: global?
-                        console.log('Global exports are not implemented');
+                        // export into module's global namespace
+                        // TODO: check for collisions and throw error?
+                        var moduleGlobalDeclaration = moduleGlobalNamespaceName + '.' + exportName;
+                        code.push(moduleGlobalDeclaration + ' = ' +
+                                  exportName + '; // module global ' + exportName);
+                        // TODO: this would pollute dev runtime... need to come up with somethign better.
+                        codePostfix.push('var ' + exportName + ' = ' + moduleGlobalDeclaration + ';');
                     }
                 }
                 if (env.onlyPrint) {
@@ -300,7 +328,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     code.push('}(' + namespace + argSep + env.global + '));');
                 }
 
-                compiledCode = code.join('\n');
+                compiledCode = code.concat(codePostfix).join('\n');
                 codePrinted = true;
             } else {
                 // todo: satisfy specific imports.

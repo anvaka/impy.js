@@ -42,6 +42,9 @@ function ModuleDef() {
     this.getNamespace = function () { 
         return this.namepsace || ''; // TODO: global?
     }
+    this.hasModuleGlobalExports = function() {
+        return this.exports.length && !this.namepsace;
+    }
 }
 
 /* export ModuleDef */

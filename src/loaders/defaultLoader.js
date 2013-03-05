@@ -28,6 +28,8 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
         codePrinted = false,
         invoke = function (moduleDef, fileName) {
             var code = [],
+                codePostfix = [],
+                moduleGlobalNamespaceName,
                 compiledCode,
                 exports = moduleDef.exports,
                 expressionName = '',
@@ -36,9 +38,17 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
 
             if (!utils.isNamespaceRegistered(namespace)) {
                 utils.registerNamespace(namespace);
-                // should go in global scope. Dots should be resolved.
+                // should go in global scope. TODO: Dots should be resolved.
                 code.push('var ' + namespace + ' = {};');
                 code.push('');
+            }
+            if (moduleDef.hasModuleGlobalExports()) {
+                if (!utils.isModuleGlobalRegisterd()) {
+                    moduleGlobalNamespaceName = utils.prepareModuleGlobalNamespace();
+                    code.push('var ' + moduleGlobalNamespaceName + ' = {};');
+                    code.push('');
+                }
+                moduleGlobalNamespaceName = utils.prepareModuleGlobalNamespace();
             }
             if (!codePrinted) {
 
@@ -47,22 +57,27 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 }
                 if (env.onlyPrint) {
                     code.push('// import ' + fileName);
-                    code.push('(function ' + expressionName +'(' + namespace + ') {');
+                    code.push('(function ' + expressionName + '(' + namespace + ') {');
                 } else {
                     // we need to provide a runtime's global variable to comply with compiled api:
-                    code.push('(function ' + expressionName +'(' + namespace + argSep + 'global) {');
+                    code.push('(function ' + expressionName + '(' + namespace + argSep + 'global) {');
                 }
 
                 // ideally this needs indent (for pretty print):
                 code.push(moduleDef.code);
                 for (var i = 0; i < exports.length; ++i) {
+                    var exportName = exports[i].exportDeclaration;
                     if (namespace) {
-                        var exportName = exports[i].exportDeclaration;
                         code.push(namespace + '.' + exportName + ' = ' +
                                   exportName + '; // export ' + exportName);
                     } else {
-                        // todo: global?
-                        console.log('Global exports are not implemented');
+                        // export into module's global namespace
+                        // TODO: check for collisions and throw error?
+                        var moduleGlobalDeclaration = moduleGlobalNamespaceName + '.' + exportName;
+                        code.push(moduleGlobalDeclaration + ' = ' +
+                                  exportName + '; // module global ' + exportName);
+                        // TODO: this would pollute dev runtime... need to come up with somethign better.
+                        codePostfix.push('var ' + exportName + ' = ' + moduleGlobalDeclaration + ';');
                     }
                 }
                 if (env.onlyPrint) {
@@ -71,7 +86,7 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                     code.push('}(' + namespace + argSep + env.global + '));');
                 }
 
-                compiledCode = code.join('\n');
+                compiledCode = code.concat(codePostfix).join('\n');
                 codePrinted = true;
             } else {
                 // todo: satisfy specific imports.
