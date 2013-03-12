@@ -1,4 +1,3 @@
-/*jslint vars: true, sloppy: true, plusplus: true */
 /*global sourcemap */
 /* namespace utils */
 
@@ -11,6 +10,8 @@ function CodeGenerator(env) {
     this.env = env;
     this.code = [];
     this.generatedOffset = 1;
+    this.fileName = 'bundle.js';
+    this.sourceMap = new sourcemap.SourceMapGenerator({file: this.fileName, sourceRoot: ''});
     this.addServiceCode([
         "(function (root, factory) {",
         "    'use strict';",
@@ -34,10 +35,20 @@ CodeGenerator.prototype.setPackageName = function (packageName) {
         // <ugly>replace in UMD header the package name export for the browser 
         // environments </ugly>
         this.code[10] = '        factory((root.' + packageName + ' = {}));';
+        this.fileName = packageName + '.js';
+        this.sourceMap._fileName = this.fileName;
     }
-}
+};
+
+CodeGenerator.prototype.getFileName = function () {
+    return this.fileName;
+};
 CodeGenerator.prototype.getCode = function () {
     return this.code.join('\n') + '}));'; // end of UMD
+};
+
+CodeGenerator.prototype.getSourceMap = function () {
+    return this.sourceMap.toString();
 };
 
 CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {
@@ -88,8 +99,13 @@ CodeGenerator.prototype.addServiceCode = function (code) {
 
 CodeGenerator.prototype.addClientCode = function (code, fileName) {
     var lines = code.split('\n');
-
+    fileName = fileName.replace('/Users/anvaka/Documents/projects/impyjs', '');
     for (var i = 0; i < lines.length; ++i) {
+        this.sourceMap.addMapping({
+            generated: { line: this.generatedOffset, column: 0},
+            original: { line: i + 1, column: 0},
+            source: fileName
+        });
         this.generatedOffset += 1;
         this.code.push(lines[i])
     }

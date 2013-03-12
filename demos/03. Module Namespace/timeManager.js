@@ -1,4 +1,4 @@
-/* export TimeManager */
+/* export */
 function TimeManager() {
 }
 

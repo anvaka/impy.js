@@ -8,17 +8,24 @@ if (typeof window === 'undefined') {
 }
 function printCode(env) {
     var code = env.codeGenerator.getCode();
-
+    if (env.printSourceMap || !env.onlyPrint) {
+        // always print the source map when running app
+        // otherwise it's configurable by client
+        code += ['',
+            '//@ sourceURL=' + env.codeGenerator.getFileName(),
+            '//@ sourceMappingURL=data:text/javascript;base64,' + btoa(env.codeGenerator.getSourceMap())
+            ].join('\n');
+    }
     if (env.onlyPrint) {
         console.log(code);
     } else {
         /*jslint evil: true */
         try {
-            (function codeRunner(){ (0, eval)(code); }());
+            (function codeRunner() { (0, eval)(code); }());
         } catch(e) {
             // todo: should resolve to original source code
             var errorName = ('name' in e ? e.name : 'Error'),
-                debugMessage = errorName + ' occured in "' + fileName + '"';
+                debugMessage = errorName + ' occured';
             if ('lineNumber' in e) {
                 debugMessage += ':' + e.lineNumber;
             }
