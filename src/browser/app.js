@@ -3,6 +3,7 @@
 /* import 'path.js' */
 /* import '../utils/resolver.js' */
 /* import '../utils/printer.js' */
+/* import '../utils/codeGen.js' */
 
 var getEntryPoint = function (env) {
         var allScripts =  document.getElementsByTagName('script'),
@@ -39,18 +40,19 @@ function prepareExports (env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
     env.getSource = getSource;
-    env.global = 'window';
 
     return {
         load : function (file, loadedCallback) {
             var loader = utils.resolveLoader(env.path.dirname(document.URL), file, env);
-            loader.load(function() {
+            env.codeGenerator = new utils.CodeGenerator(env);
+            loader.load(function () {
                 var topModule = loader.getDefinition();
-                utils.printCode(env, topModule.namespace);
+                env.codeGenerator.setPackageName(topModule.packageName);
+                utils.printCode(env);
                 if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
             });
         }
     };
 }
-    
+
 /* export prepareExports */

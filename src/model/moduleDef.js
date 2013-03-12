@@ -26,25 +26,28 @@ function ModuleDef() {
         if (imports.length === 0) {
             callback(); // nothing to load here.
         }
-    }
+    };
     this.addImportDef = function (importDef) {
         // TODO: Duplicates?
         this.imports.push(new model.ImportDef(importDef));
-    }
+    };
     this.addExportDef = function (exportDef) {
         // TODO: Duplicates?
         this.exports.push(new model.ExportDef(exportDef));
-    }
+    };
     this.setNamespace = function (namespaceDecl) {
         // todo: validate, throw error if already defined, reserved words.
         this.namepsace = namespaceDecl;
-    }
-    this.getNamespace = function () { 
+    };
+    this.getNamespace = function () {
         return this.namepsace || ''; // TODO: global?
-    }
-    this.hasModuleGlobalExports = function() {
+    };
+    this.hasModuleGlobalExports = function () {
         return this.exports.length && !this.namepsace;
-    }
+    };
+    this.setPackage = function(packageDecl) {
+        this.packageName = packageDecl.replace(/\s/g, '');
+    };
 }
 
 /* export ModuleDef */

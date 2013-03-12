@@ -1,12 +1,33 @@
 /* namespace utils */
+if (typeof window === 'undefined') {
+    var btoa = function (str) {
+        return new Buffer(str, 'binary').toString('base64');
+    };
+} else {
+    var btoa = window.btoa;
+}
+function printCode(env) {
+    var code = env.codeGenerator.getCode();
 
-function printCode(env, topNamespace) {
     if (env.onlyPrint) {
-        // wrap top module into its own block to export module's public api:
-        env.executedCode.unshift('','(function (global) {');
-        env.executedCode.push('', '}).call(this, (typeof module !== "undefined" && module.exports) || window);');
-
-        console.log(env.executedCode.join('\n'));
+        console.log(code);
+    } else {
+        /*jslint evil: true */
+        try {
+            (function codeRunner(){ (0, eval)(code); }());
+        } catch(e) {
+            // todo: should resolve to original source code
+            var errorName = ('name' in e ? e.name : 'Error'),
+                debugMessage = errorName + ' occured in "' + fileName + '"';
+            if ('lineNumber' in e) {
+                debugMessage += ':' + e.lineNumber;
+            }
+            if ('message' in e) {
+                debugMessage += ': ' + e.message;
+            }
+            console.error(debugMessage);
+            throw e;
+        }        
     }
 }
 

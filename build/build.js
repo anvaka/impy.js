@@ -1,2 +1,2 @@
-var im = require('../dist/impy.js').impyjs;
+var im = require('../dist/impy.js');
 im.load('../src/main.js');

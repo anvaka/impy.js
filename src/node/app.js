@@ -1,6 +1,7 @@
 /* namespace node */
 /* import '../utils/resolver.js' */
 /* import '../utils/printer.js' */
+/* import '../utils/codeGen.js' */
 
 var getSource = function (location, callback) {
         var fs = require('fs');
@@ -20,14 +21,15 @@ function prepareExports(env) {
     return {
         load : function (file, loadedCallback) {
             env.entryPoint = env.path.resolve(file);
-            env.global = 'module.exports';
+            env.codeGenerator = new utils.CodeGenerator(env);
 
             var currentDir = process.cwd();
-            
+
             var loader = utils.resolveLoader(currentDir, file, env);
             loader.load(function () {
                 var topModule = loader.getDefinition();
-                utils.printCode(env, topModule.namespace);
+                env.codeGenerator.setPackageName(topModule.packageName);
+                utils.printCode(env);
                 if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
             });
         }

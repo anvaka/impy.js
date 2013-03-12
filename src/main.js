@@ -1,3 +1,7 @@
+/* package impyjs */
+
+/* import '../libs/sourcemap.js' */
+
 /* import 'node/app.js' */
 /* import 'browser/app.js' */
 /* import 'version.js' */
@@ -21,5 +25,5 @@ if (env.entryPoint) { // load the first script, if environment has it.
     impyAPI.load(env.entryPoint);
 }
 
-// TODO: I'm still playing with library exports. This part may be changed
-global.impyjs = impyAPI;
+// TODO: I'm still playing with library exports. This part may be changed:
+/* public export impyAPI.load */
