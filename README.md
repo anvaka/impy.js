@@ -1,7 +1,7 @@
 impy.js
 =======
 
-I've been doing JavaScript development for a little over a year now, and I'm disappointed by lack of modules support in JS world (and I do not mean AMD or CJS). This is my attempt to make development of my next application fast and easy.
+This is my attempt to make development of my next application fast and easy. The library allows you to organize your code nicely into separate files. When debugging your code within the browser each file appears as a seprate resource in the dev tools. Once you are done developing, you can compile the code and have just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation result has no dependency on impy.js, and is absolutely valid module in CJS/AMD/Browser worlds.
 
 Example
 -------
@@ -11,11 +11,11 @@ Let's say your project consists of two files ```timeUtils.js``` and ```main.js``
 *timeUtils.js*
 ```javascript
 /* namespace util */
+
+/* export printTime */
 function printTime() {
   return (new Date()).toLocaleTimeString();
 }
-
-/* export printTime */
 ```
 
 *main.js*
