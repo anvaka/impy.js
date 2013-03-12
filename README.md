@@ -1,7 +1,7 @@
 impy.js
 =======
 
-I've been doing JavaScript development for a little over a year now, and I'm disappointed by lack of modules support in JS world. This is my attempt to make development of my next application fast and easy.
+I've been doing JavaScript development for a little over a year now, and I'm disappointed by lack of modules support in JS world (and I do not mean AMD or CJS). This is my attempt to make development of my next application fast and easy.
 
 Example
 -------
@@ -60,6 +60,7 @@ When you open this page in the browser impy resolves all dependencies and execut
 ```
 
 It will also load each file in your developer tools as a separate resource, so you are never lost in the 80,000 lines of combined code.
+![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
 
 You can also direct impy.js to compile the code starting from the given file. Once your code is compiled there are no traces of impy at all. Leaving only your code and 0 bytes of extra-dependencies in the runtime.
 
