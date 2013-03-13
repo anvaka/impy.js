@@ -13,7 +13,7 @@ Let's say your project consists of two files ```timeUtils.js``` and ```main.js``
 /* namespace util */
 
 /* export */
-function printTime() {
+function getLocalTime() {
   return (new Date()).toLocaleTimeString();
 }
 ```
@@ -21,7 +21,7 @@ function printTime() {
 *main.js*
 ```javascript
 /* import 'timeUtils.js' */
-console.log(util.printTime());
+console.log(util.getLocalTime());
 ```
 
 Your main development page *index.html*:

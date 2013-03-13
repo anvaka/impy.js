@@ -1,6 +1,6 @@
 /* namespace util */
 
 /* export */
-function printTime() {
+function getLocalTime() {
     return (new Date()).toLocaleTimeString();
 }
