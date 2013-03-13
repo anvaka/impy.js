@@ -12,7 +12,7 @@ Let's say your project consists of two files ```timeUtils.js``` and ```main.js``
 ```javascript
 /* namespace util */
 
-/* export printTime */
+/* export */
 function printTime() {
   return (new Date()).toLocaleTimeString();
 }
@@ -37,32 +37,77 @@ Your main development page *index.html*:
 </html>
 ```
 
-When you open this page in the browser impy resolves all dependencies and executes the code:
+When you open this page in the browser impy.js resolves all dependencies and runs the program. This is the final code which actually gets executed:
 ```javascript
-(function(global) {
+(function (root, factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory({});
+    }
+}(this, function (exports) {
     var util = {};
-
-    // import timeUtils.js
-    (function timeUtils_js(util) {
-
-        function printTime() {
-            return (new Date()).toLocaleTimeString();
+    // import timeUtils.js into util namespace:
+    (function(util) {
+        function getLocalTime() {
+          return (new Date()).toLocaleTimeString();
         }
-        util.printTime = printTime; // export printTime
+        
+        util.getLocalTime = getLocalTime;
     }(util));
 
-    // import main.js
-    (function main_js() {
-        console.log("Current time is: " + util.printTime());
-    }());
-
-}).call(this, (typeof module !== "undefined" && module.exports) || window);
+    console.log(util.getLocalTime());
+}));
 ```
+
+*Namespaces:* is the way to organize internal code structure. As you can see from code above the outter world never gets a chance to know what's inside your library. This helps to not pollute global JavaScript namespace, but what if you want to export stuff to let others use your library?
+
+/* package */
+-------------
+In different programming languages and worlds the set of public library API is often known as a package, module or assembly. Impy provides two instructions to let you declare public API of your code:
+
+* ```/* package name */``` - by this ```name``` your code will go in the browser environment. (i.e. window.name will be your "window" into the library's public export).
+* ```/* public export foo */``` - makes variable ```foo``` part of the public API of your library. 
+
+You can see both of these directives being used in the impy itself: take a look at impy's [main.js](https://github.com/anvaka/impy.js/blob/master/src/main.js#L1) - the library goes by name ```impyjs```, and exports ```load``` function. Oh, yes, the impy is using itself to organize and compile its own code. 
+
 
 It will also load each file in your developer tools as a separate resource, so you are never lost in the 80,000 lines of combined code.
 ![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
 
-You can also direct impy.js to compile the code starting from the given file. Once your code is compiled there are no traces of impy at all. Leaving only your code and 0 bytes of extra-dependencies in the runtime.
+
+Development experience is at core
+---------------------------------
+
+When developing your code with impy each file of your project is shown as a separate resource in the dev tools:
+
+![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
+
+Impy generates source maps file on the fly and provides it to the browser.
+
+Awesome unit testing experience
+-------------------------------
+When testing impy-based code it's super easy to test one file at a time, and have all required dependencies pulled in, with no need to rebuild your entire code base. The following is a part of the actual impy's test suite ([parser_tests.js](https://github.com/anvaka/impy.js/blob/master/tests/parser_tests.js#L4-L6)):
+
+```javascript
+impyjs.load('../src/utils/parser.js',
+    function (_, api) {
+        var parser = api.utils.parseModule;
+
+        test('Empty file', function () {
+            var moduleDef = parser('');
+
+            equal(moduleDef.exports.length, 0, "No exports");
+            equal(moduleDef.imports.length, 0, "No imports");
+        });
+    }
+);
+```
+Let's say this test fails. To fix it, you only need to edit parser.js, and nothing else. Impy knows how to dynamically pull all dependencies of the 'parser', and provide exported features of the 'parser.js' via the second ```api``` argument. This keeps global namespace always clean and nice.
+
 
 Experimental Warning
 --------------------
