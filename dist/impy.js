@@ -8,7 +8,7 @@
     } else if (typeof exports !== 'undefined') {
         factory(exports);
     } else {
-        factory((root.impyjs = {}));
+        return factory((root.impyjs = {}));
     }
 }(this, function (exports) {
 var sourcemap = {};
@@ -1382,7 +1382,7 @@ function printCode(env) {
     } else {
         /*jslint evil: true */
         try {
-            (function codeRunner() { (0, eval)(code); }());
+            return (0, eval)(code);
         } catch(e) {
             // todo: should resolve to original source code
             var errorName = ('name' in e ? e.name : 'Error'),
@@ -1429,7 +1429,7 @@ function CodeGenerator(env) {
         "    } else if (typeof exports !== 'undefined') {",
         "        factory(exports);",
         "    } else {",
-        "        factory({});",
+        "        return factory({});",
         "    }",
         "}(this, function (exports) {"]);
 
@@ -1440,7 +1440,7 @@ CodeGenerator.prototype.setPackageName = function (packageName) {
     if (packageName) {
         // <ugly>replace in UMD header the package name export for the browser 
         // environments </ugly>
-        this.code[10] = '        factory((root.' + packageName + ' = {}));';
+        this.code[10] = '        return factory((root.' + packageName + ' = {}));';
         this.fileName = packageName + '.js';
         this.sourceMap._fileName = this.fileName;
     }
@@ -1450,11 +1450,30 @@ CodeGenerator.prototype.getFileName = function () {
     return this.fileName;
 };
 CodeGenerator.prototype.getCode = function () {
-    return this.code.join('\n') + '}));'; // end of UMD
+    var exposedNamespaces = '';
+    if (this.env.exposeNamespace) {
+        exposedNamespaces = '\nreturn ' + this.getExposedNamespaces() + ';\n';
+    }
+    return this.code.join('\n') + exposedNamespaces + '}));'; // end of UMD
 };
 
 CodeGenerator.prototype.getSourceMap = function () {
     return this.sourceMap.toString();
+};
+
+CodeGenerator.prototype.getExposedNamespaces = function () {
+    var namespaces = [],
+        key;
+    for (key in this.registeredNamespaces) {
+        if (this.registeredNamespaces.hasOwnProperty(key)) {
+            // todo: dots?
+            namespaces.push(key + ': ' + key);
+        }
+    }
+    if (namespaces.length) {
+        return '{' + namespaces.join(',') + '}';
+    }
+    return '';
 };
 
 CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {
@@ -1895,6 +1914,7 @@ node.prepareExports = prepareExports; // export prepareExports
 }(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/app.js
 (function app_js(browser) {
+/*global window */
 
 
 
@@ -1902,9 +1922,12 @@ node.prepareExports = prepareExports; // export prepareExports
 
 
 
-var getEntryPoint = function (env) {
-        var allScripts =  document.getElementsByTagName('script'),
-            entryPoint = allScripts[allScripts.length - 1].getAttribute('data-main'),
+var getCurrentScript = function () {
+        var allScripts =  window.document.getElementsByTagName('script');
+        return allScripts[allScripts.length - 1];
+    },
+    getEntryPoint = function (env) {
+        var entryPoint = getCurrentScript().getAttribute('data-main'),
             port = window.location.port ? ':' + window.location.port : '',
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
 
@@ -1913,16 +1936,16 @@ var getEntryPoint = function (env) {
     },
 
     getSource = function (location, callback) {
-        var r = new XMLHttpRequest(),
+        var r = new window.XMLHttpRequest(),
             transferComplete = function (e) {
                 if (r.status < 200 || r.status > 299) {
-                    console.error('Bad response code (' + r.status + ') for ' + location +'. Make sure the file exists.');
+                    window.console.error('Bad response code (' + r.status + ') for ' + location + '. Make sure the file exists.');
                     // exception?
                 }
                 callback(this.responseText);
             },
             transferFailed = function (e) {
-                console.error('Failed to load ' + location);
+                window.console.error('Failed to load ' + location);
                 throw e;
             };
 
@@ -1933,20 +1956,23 @@ var getEntryPoint = function (env) {
         r.send();
     };
 
-function prepareExports (env) {
+function prepareExports(env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
     env.getSource = getSource;
+    env.exposeNamespace = getCurrentScript().getAttribute('data-expose-namespace');
 
     return {
         load : function (file, loadedCallback) {
-            var loader = utils.resolveLoader(env.path.dirname(document.URL), file, env);
+            var loader = utils.resolveLoader(env.path.dirname(window.document.URL), file, env);
             env.codeGenerator = new utils.CodeGenerator(env);
             loader.load(function () {
                 var topModule = loader.getDefinition();
                 env.codeGenerator.setPackageName(topModule.packageName);
-                utils.printCode(env);
-                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
+                var result = utils.printCode(env);
+                if (typeof loadedCallback === 'function') {
+                    loadedCallback(topModule, result);
+                }
             });
         }
     };

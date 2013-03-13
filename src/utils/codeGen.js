@@ -23,7 +23,7 @@ function CodeGenerator(env) {
         "    } else if (typeof exports !== 'undefined') {",
         "        factory(exports);",
         "    } else {",
-        "        factory({});",
+        "        return factory({});",
         "    }",
         "}(this, function (exports) {"]);
 
@@ -34,7 +34,7 @@ CodeGenerator.prototype.setPackageName = function (packageName) {
     if (packageName) {
         // <ugly>replace in UMD header the package name export for the browser 
         // environments </ugly>
-        this.code[10] = '        factory((root.' + packageName + ' = {}));';
+        this.code[10] = '        return factory((root.' + packageName + ' = {}));';
         this.fileName = packageName + '.js';
         this.sourceMap._fileName = this.fileName;
     }
@@ -44,11 +44,30 @@ CodeGenerator.prototype.getFileName = function () {
     return this.fileName;
 };
 CodeGenerator.prototype.getCode = function () {
-    return this.code.join('\n') + '}));'; // end of UMD
+    var exposedNamespaces = '';
+    if (this.env.exposeNamespace) {
+        exposedNamespaces = '\nreturn ' + this.getExposedNamespaces() + ';\n';
+    }
+    return this.code.join('\n') + exposedNamespaces + '}));'; // end of UMD
 };
 
 CodeGenerator.prototype.getSourceMap = function () {
     return this.sourceMap.toString();
+};
+
+CodeGenerator.prototype.getExposedNamespaces = function () {
+    var namespaces = [],
+        key;
+    for (key in this.registeredNamespaces) {
+        if (this.registeredNamespaces.hasOwnProperty(key)) {
+            // todo: dots?
+            namespaces.push(key + ': ' + key);
+        }
+    }
+    if (namespaces.length) {
+        return '{' + namespaces.join(',') + '}';
+    }
+    return '';
 };
 
 CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {

@@ -21,7 +21,7 @@ function printCode(env) {
     } else {
         /*jslint evil: true */
         try {
-            (function codeRunner() { (0, eval)(code); }());
+            return (0, eval)(code);
         } catch(e) {
             // todo: should resolve to original source code
             var errorName = ('name' in e ? e.name : 'Error'),
