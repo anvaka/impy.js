@@ -2,6 +2,10 @@
 
 /* import '../utils/parser.js' */
 
+<<<<<<< HEAD
+=======
+/* export */
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function DefaultLoader(resourceLocation, env, resolveLoader) {
     var codeGenerated = false,
         moduleDefinition,
@@ -21,9 +25,14 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 if (!codeGenerated) {
                     env.codeGenerator.addFile(moduleDef, resourceLocation);
                     codeGenerated = true;
+<<<<<<< HEAD
                 } else {
                     // todo: satisfy specific imports.
                 }
+=======
+                } 
+                // todo: satisfy specific imports?
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 
                 callback();
             });
@@ -52,6 +61,10 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
     this.getLocation = function () {
         return resourceLocation; // todo: should be relative
     };
+<<<<<<< HEAD
 }
 
 /* export DefaultLoader */
+=======
+}
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7

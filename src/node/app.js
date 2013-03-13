@@ -14,6 +14,10 @@ var getSource = function (location, callback) {
         });
     };
 
+<<<<<<< HEAD
+=======
+/* export */
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
@@ -34,6 +38,10 @@ function prepareExports(env) {
             });
         }
     };
+<<<<<<< HEAD
 }
 
 /* export prepareExports */
+=======
+}
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7

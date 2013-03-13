@@ -6,6 +6,11 @@ if (typeof window === 'undefined') {
 } else {
     var btoa = window.btoa;
 }
+<<<<<<< HEAD
+=======
+
+/* export */
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function printCode(env) {
     var code = env.codeGenerator.getCode();
     if (env.printSourceMap || !env.onlyPrint) {
@@ -21,7 +26,11 @@ function printCode(env) {
     } else {
         /*jslint evil: true */
         try {
+<<<<<<< HEAD
             (function codeRunner() { (0, eval)(code); }());
+=======
+            return (0, eval)(code);
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         } catch(e) {
             // todo: should resolve to original source code
             var errorName = ('name' in e ? e.name : 'Error'),
@@ -36,6 +45,10 @@ function printCode(env) {
             throw e;
         }        
     }
+<<<<<<< HEAD
 }
 
 /* export printCode */
+=======
+}
+>>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
