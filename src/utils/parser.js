@@ -20,7 +20,7 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
             jsFile.substring(startFrom, 100)].join('\n');
 }
 
-/* export parseModule */
+/* export */
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
         declarationType,

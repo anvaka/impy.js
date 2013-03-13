@@ -14,6 +14,7 @@ var getSource = function (location, callback) {
         });
     };
 
+/* export */
 function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
@@ -35,5 +36,3 @@ function prepareExports(env) {
         }
     };
 }
-
-/* export prepareExports */

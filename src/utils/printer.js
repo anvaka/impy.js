@@ -6,6 +6,8 @@ if (typeof window === 'undefined') {
 } else {
     var btoa = window.btoa;
 }
+
+/* export */
 function printCode(env) {
     var code = env.codeGenerator.getCode();
     if (env.printSourceMap || !env.onlyPrint) {
@@ -37,5 +39,3 @@ function printCode(env) {
         }        
     }
 }
-
-/* export printCode */

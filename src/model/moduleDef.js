@@ -3,6 +3,7 @@
 /* import 'importDef.js' */
 /* import 'exportDef.js' */
 
+/* export */
 function ModuleDef() {
     this.code = '';
     this.imports = [];
@@ -49,5 +50,3 @@ function ModuleDef() {
         this.packageName = packageDecl.replace(/\s/g, '');
     };
 }
-
-/* export ModuleDef */

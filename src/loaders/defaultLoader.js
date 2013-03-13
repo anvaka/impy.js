@@ -2,6 +2,7 @@
 
 /* import '../utils/parser.js' */
 
+/* export */
 function DefaultLoader(resourceLocation, env, resolveLoader) {
     var codeGenerated = false,
         moduleDefinition,
@@ -21,9 +22,8 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 if (!codeGenerated) {
                     env.codeGenerator.addFile(moduleDef, resourceLocation);
                     codeGenerated = true;
-                } else {
-                    // todo: satisfy specific imports.
-                }
+                } 
+                // todo: satisfy specific imports?
 
                 callback();
             });
@@ -53,5 +53,3 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
         return resourceLocation; // todo: should be relative
     };
 }
-
-/* export DefaultLoader */

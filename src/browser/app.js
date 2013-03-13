@@ -40,6 +40,7 @@ var getCurrentScript = function () {
         r.send();
     };
 
+/* export */
 function prepareExports(env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
@@ -61,5 +62,3 @@ function prepareExports(env) {
         }
     };
 }
-
-/* export prepareExports */

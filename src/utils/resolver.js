@@ -1,8 +1,10 @@
 /* import '../loaders/defaultLoader.js' */
 
 /* namespace utils */
-
+// TODO: this shouldn't be global!
 var resolvedLoaders = {};
+
+/* export */
 function resolveLoader(currentDir, importPath, env) {
     // split('!') and get prefix. Calculate absolute path.
     // note: should get loader by loaders map, key is path.
@@ -12,5 +14,3 @@ function resolveLoader(currentDir, importPath, env) {
     }
     return resolvedLoaders[resourceLocation];
 }
-
-/* export resolveLoader */

@@ -5,7 +5,7 @@ function isArray(obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }
 
-/* export CodeGenerator */
+/* export */
 function CodeGenerator(env) {
     this.env = env;
     this.code = [];

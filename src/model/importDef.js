@@ -1,5 +1,6 @@
 /* namespace model */
 
+/* export */
 /* Represents an import statment */
 function ImportDef(importDeclaration) {
     this.importDeclaration = importDeclaration;
@@ -21,5 +22,3 @@ function ImportDef(importDeclaration) {
         return assignedLoader;
     };
 }
-
-/* export ImportDef */

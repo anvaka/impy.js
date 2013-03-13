@@ -1351,8 +1351,9 @@ var impyjs = {};
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
 (function version_js(impyjs) {
 
-var version = '0.0.1.1';
 
+
+var version = '0.0.1.2';
 impyjs.version = version; // export version
 }(impyjs));
 var utils = {};
@@ -1367,6 +1368,8 @@ if (typeof window === 'undefined') {
 } else {
     var btoa = window.btoa;
 }
+
+
 function printCode(env) {
     var code = env.codeGenerator.getCode();
     if (env.printSourceMap || !env.onlyPrint) {
@@ -1398,8 +1401,6 @@ function printCode(env) {
         }        
     }
 }
-
-
 utils.printCode = printCode; // export printCode
 }(utils));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/codeGen.js
@@ -1573,6 +1574,7 @@ var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
         };
     };
 
+
 var path = {
     /**
      * Based on a given web resource address returns a 'directory' name
@@ -1644,14 +1646,13 @@ var path = {
 
     root : ''
 };
-
-
 browser.path = path; // export path
 }(browser));
 var model = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/model/importDef.js
 (function importDef_js(model) {
+
 
 
 /* Represents an import statment */
@@ -1675,24 +1676,22 @@ function ImportDef(importDeclaration) {
         return assignedLoader;
     };
 }
-
-
 model.ImportDef = ImportDef; // export ImportDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
 (function exportDef_js(model) {
 
 
+
 function ExportDef(exportDeclaration) {
     // todo: validate
     this.exportDeclaration = exportDeclaration;
 }
-
-
 model.ExportDef = ExportDef; // export ExportDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/moduleDef.js
 (function moduleDef_js(model) {
+
 
 
 
@@ -1744,8 +1743,6 @@ function ModuleDef() {
         this.packageName = packageDecl.replace(/\s/g, '');
     };
 }
-
-
 model.ModuleDef = ModuleDef; // export ModuleDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/parser.js
@@ -1818,6 +1815,7 @@ var loaders = {};
 
 
 
+
 function DefaultLoader(resourceLocation, env, resolveLoader) {
     var codeGenerated = false,
         moduleDefinition,
@@ -1837,9 +1835,8 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 if (!codeGenerated) {
                     env.codeGenerator.addFile(moduleDef, resourceLocation);
                     codeGenerated = true;
-                } else {
-                    // todo: satisfy specific imports.
-                }
+                } 
+                // todo: satisfy specific imports?
 
                 callback();
             });
@@ -1869,8 +1866,6 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
         return resourceLocation; // todo: should be relative
     };
 }
-
-
 loaders.DefaultLoader = DefaultLoader; // export DefaultLoader
 }(loaders));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/resolver.js
@@ -1878,8 +1873,10 @@ loaders.DefaultLoader = DefaultLoader; // export DefaultLoader
 
 
 
-
+// TODO: this shouldn't be global!
 var resolvedLoaders = {};
+
+
 function resolveLoader(currentDir, importPath, env) {
     // split('!') and get prefix. Calculate absolute path.
     // note: should get loader by loaders map, key is path.
@@ -1889,8 +1886,6 @@ function resolveLoader(currentDir, importPath, env) {
     }
     return resolvedLoaders[resourceLocation];
 }
-
-
 utils.resolveLoader = resolveLoader; // export resolveLoader
 }(utils));
 var node = {};
@@ -1913,6 +1908,7 @@ var getSource = function (location, callback) {
         });
     };
 
+
 function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
@@ -1934,8 +1930,6 @@ function prepareExports(env) {
         }
     };
 }
-
-
 node.prepareExports = prepareExports; // export prepareExports
 }(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/app.js
@@ -1982,6 +1976,7 @@ var getCurrentScript = function () {
         r.send();
     };
 
+
 function prepareExports(env) {
     env.path = browser.path;
     env.entryPoint = getEntryPoint(env);
@@ -2003,8 +1998,6 @@ function prepareExports(env) {
         }
     };
 }
-
-
 browser.prepareExports = prepareExports; // export prepareExports
 }(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/main.js
