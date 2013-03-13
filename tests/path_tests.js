@@ -52,7 +52,7 @@ impyjs.load('../src/browser/path.js',
 
             equal(path.resolve('/bar/', ''), '/bar/', 'Base dir and no file');
             equal(path.resolve('/bar/'), '/bar/', 'Base dir and undefined file');
-            
+
             equal(path.resolve('/bar/', 'http://site.com/file.js'), 'http://site.com/file.js', 'Absolute file address');
         });
 

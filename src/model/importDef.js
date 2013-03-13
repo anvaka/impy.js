@@ -3,7 +3,6 @@
 /* Represents an import statment */
 function ImportDef(importDeclaration) {
     this.importDeclaration = importDeclaration;
-
     var assignedLoader,
         rePath = /['"](.+)['"]/,
         pathMatch = importDeclaration.match(rePath),
