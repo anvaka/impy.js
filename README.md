@@ -1,7 +1,7 @@
 impy.js
 =======
 
-This is my attempt to make development of my next application fast and easy. The library allows you to organize your code nicely into separate files. When debugging your code within the browser each file appears as a seprate resource in the dev tools. Once you are done developing, you can compile the code and have just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation result has no dependency on impy.js, and is absolutely valid module in CJS/AMD/Browser worlds.
+This is my attempt to make development of my next application fast and easy. The library allows you to organize your code nicely into separate files. When debugging your code within the browser each file appears as a separate resource in the dev tools. Once you are done developing, you can compile the code and have just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation result has no dependency on impy.js, and is absolutely valid module in CJS/AMD/Browser worlds. Let's see these features in more details.
 
 Example
 -------
@@ -63,21 +63,16 @@ When you open this page in the browser impy.js resolves all dependencies and run
 }));
 ```
 
-*Namespaces:* is the way to organize internal code structure. As you can see from code above the outter world never gets a chance to know what's inside your library. This helps to not pollute global JavaScript namespace, but what if you want to export stuff to let others use your library?
+Namespaces is the way to organize internal code structure. As you can see from code above the outer world never gets a chance to know what's inside your library. This helps to not pollute global JavaScript namespace, but what if you want to export stuff to let others use your library?
 
 /* package */
 -------------
-In different programming languages and worlds the set of public library API is often known as a package, module or assembly. Impy provides two instructions to let you declare public API of your code:
+In different programming languages the set of public library API is often known as a package, a module or an assembly. Impy provides two instructions to let you declare public API of your code:
 
 * ```/* package name */``` - by this ```name``` your code will go in the browser environment. (i.e. window.name will be your "window" into the library's public export).
 * ```/* public export foo */``` - makes variable ```foo``` part of the public API of your library. 
 
 You can see both of these directives being used in the impy itself: take a look at impy's [main.js](https://github.com/anvaka/impy.js/blob/master/src/main.js#L1) - the library goes by name ```impyjs```, and exports ```load``` function. Oh, yes, the impy is using itself to organize and compile its own code. 
-
-
-It will also load each file in your developer tools as a separate resource, so you are never lost in the 80,000 lines of combined code.
-![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
-
 
 Development experience is at core
 ---------------------------------
@@ -86,7 +81,7 @@ When developing your code with impy each file of your project is shown as a sepa
 
 ![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
 
-Impy generates source maps file on the fly and provides it to the browser.
+Impy generates source maps on the fly and provides it to the browser.
 
 Awesome unit testing experience
 -------------------------------
@@ -106,14 +101,12 @@ impyjs.load('../src/utils/parser.js',
     }
 );
 ```
-Let's say this test fails. To fix it, you only need to edit parser.js, and nothing else. Impy knows how to dynamically pull all dependencies of the 'parser', and provide exported features of the 'parser.js' via the second ```api``` argument. This keeps global namespace always clean and nice.
+Let's say this test fails. To fix it, you only need to edit [parser.js](https://github.com/anvaka/impy.js/blob/master/src/utils/parser.js), and nothing else. Impy knows how to dynamically pull all dependencies of the parser.js, and provide exported features of the 'parser.js' via the second ```api``` argument. This keeps global namespace always clean and nice.
 
 
 Experimental Warning
 --------------------
-This library is highly experimental. It is itself is written in an "impy style": check the ```src``` folder to see how it's structured and compare it with the ```dist``` folder. *The library uses itself to compile its own source code*.
-
-My goal is to make a developer friendly environment, with a very concise API. Thus I may change it as I play with impy in my other projects.
+This library is highly experimental. My goal is to make a developer friendly environment, with a very concise API. Thus I may change it as I play with impy in my other projects.
 
 Have a feedback? 
 ----------------
