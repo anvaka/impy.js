@@ -8,11 +8,7 @@
     } else if (typeof exports !== 'undefined') {
         factory(exports);
     } else {
-<<<<<<< HEAD
-        factory((root.impyjs = {}));
-=======
         return factory((root.impyjs = {}));
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
     }
 }(this, function (exports) {
 var sourcemap = {};
@@ -1355,14 +1351,9 @@ var impyjs = {};
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
 (function version_js(impyjs) {
 
-<<<<<<< HEAD
-var version = '0.0.1.1';
-
-=======
 
 
 var version = '0.0.1.1';
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 impyjs.version = version; // export version
 }(impyjs));
 var utils = {};
@@ -1377,11 +1368,8 @@ if (typeof window === 'undefined') {
 } else {
     var btoa = window.btoa;
 }
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function printCode(env) {
     var code = env.codeGenerator.getCode();
     if (env.printSourceMap || !env.onlyPrint) {
@@ -1397,11 +1385,7 @@ function printCode(env) {
     } else {
         /*jslint evil: true */
         try {
-<<<<<<< HEAD
-            (function codeRunner() { (0, eval)(code); }());
-=======
             return (0, eval)(code);
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         } catch(e) {
             // todo: should resolve to original source code
             var errorName = ('name' in e ? e.name : 'Error'),
@@ -1417,11 +1401,6 @@ function printCode(env) {
         }        
     }
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 utils.printCode = printCode; // export printCode
 }(utils));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/codeGen.js
@@ -1451,11 +1430,7 @@ function CodeGenerator(env) {
         "    } else if (typeof exports !== 'undefined') {",
         "        factory(exports);",
         "    } else {",
-<<<<<<< HEAD
-        "        factory({});",
-=======
         "        return factory({});",
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         "    }",
         "}(this, function (exports) {"]);
 
@@ -1466,11 +1441,7 @@ CodeGenerator.prototype.setPackageName = function (packageName) {
     if (packageName) {
         // <ugly>replace in UMD header the package name export for the browser 
         // environments </ugly>
-<<<<<<< HEAD
-        this.code[10] = '        factory((root.' + packageName + ' = {}));';
-=======
         this.code[10] = '        return factory((root.' + packageName + ' = {}));';
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         this.fileName = packageName + '.js';
         this.sourceMap._fileName = this.fileName;
     }
@@ -1480,23 +1451,17 @@ CodeGenerator.prototype.getFileName = function () {
     return this.fileName;
 };
 CodeGenerator.prototype.getCode = function () {
-<<<<<<< HEAD
-    return this.code.join('\n') + '}));'; // end of UMD
-=======
     var exposedNamespaces = '';
     if (this.env.exposeNamespace) {
         exposedNamespaces = '\nreturn ' + this.getExposedNamespaces() + ';\n';
     }
     return this.code.join('\n') + exposedNamespaces + '}));'; // end of UMD
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 };
 
 CodeGenerator.prototype.getSourceMap = function () {
     return this.sourceMap.toString();
 };
 
-<<<<<<< HEAD
-=======
 CodeGenerator.prototype.getExposedNamespaces = function () {
     var namespaces = [],
         key;
@@ -1512,7 +1477,6 @@ CodeGenerator.prototype.getExposedNamespaces = function () {
     return '';
 };
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {
     var env = this.env,
         exports = moduleDef.exports,
@@ -1610,10 +1574,7 @@ var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
         };
     };
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 var path = {
     /**
      * Based on a given web resource address returns a 'directory' name
@@ -1685,11 +1646,6 @@ var path = {
 
     root : ''
 };
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 browser.path = path; // export path
 }(browser));
 var model = {};
@@ -1698,17 +1654,10 @@ var model = {};
 (function importDef_js(model) {
 
 
-<<<<<<< HEAD
-/* Represents an import statment */
-function ImportDef(importDeclaration) {
-    this.importDeclaration = importDeclaration;
-
-=======
 
 /* Represents an import statment */
 function ImportDef(importDeclaration) {
     this.importDeclaration = importDeclaration;
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
     var assignedLoader,
         rePath = /['"](.+)['"]/,
         pathMatch = importDeclaration.match(rePath),
@@ -1727,30 +1676,17 @@ function ImportDef(importDeclaration) {
         return assignedLoader;
     };
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 model.ImportDef = ImportDef; // export ImportDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
 (function exportDef_js(model) {
 
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function ExportDef(exportDeclaration) {
     // todo: validate
     this.exportDeclaration = exportDeclaration;
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 model.ExportDef = ExportDef; // export ExportDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/moduleDef.js
@@ -1760,10 +1696,7 @@ model.ExportDef = ExportDef; // export ExportDef
 
 
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function ModuleDef() {
     this.code = '';
     this.imports = [];
@@ -1810,11 +1743,6 @@ function ModuleDef() {
         this.packageName = packageDecl.replace(/\s/g, '');
     };
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 model.ModuleDef = ModuleDef; // export ModuleDef
 }(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/parser.js
@@ -1822,8 +1750,6 @@ model.ModuleDef = ModuleDef; // export ModuleDef
 
 
 
-<<<<<<< HEAD
-=======
 function getNextDeclaration(jsFile, startFrom) {
     // this is dumb, but hey, I don't want to create
     // AST parser here. Who knows, maybe I'll change current approach
@@ -1843,21 +1769,11 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
             jsFile.substring(startFrom, 100)].join('\n');
 }
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
         declarationType,
         importDefinition,
-<<<<<<< HEAD
-        re = /\/\*\s*(import|public export|export|namespace|package)\s+(.+?);?\s*?\*\//g;
-
-    //while(match = re.exec(jsFile)) {
-    moduleDef.code = jsFile.replace(re, function (match, declarationType, declaration, pos) {
-        if (declarationType === 'import') {
-            moduleDef.addImportDef(declaration);
-        } else if (declarationType === 'export') {
-=======
         re = /\/\*\s*(import|public export|export|namespace|package)\b(.*);?\s*?\*\//g;
 
     moduleDef.code = jsFile.replace(re, function (match, declarationType, declaration, pos) {
@@ -1874,7 +1790,6 @@ function parseModule(jsFile) {
                 err.message = getDiagnosticMissingExport(jsFile, match, pos);
                 throw err;
             }
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
             moduleDef.addExportDef(declaration);
         } else if (declarationType === 'namespace') {
             moduleDef.setNamespace(declaration);
@@ -1888,10 +1803,6 @@ function parseModule(jsFile) {
         return '';
     });
 
-<<<<<<< HEAD
-    // moduleDef.code = jsFile;
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
     return moduleDef;
 }
 utils.parseModule = parseModule; // export parseModule
@@ -1904,10 +1815,7 @@ var loaders = {};
 
 
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function DefaultLoader(resourceLocation, env, resolveLoader) {
     var codeGenerated = false,
         moduleDefinition,
@@ -1927,14 +1835,8 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
                 if (!codeGenerated) {
                     env.codeGenerator.addFile(moduleDef, resourceLocation);
                     codeGenerated = true;
-<<<<<<< HEAD
-                } else {
-                    // todo: satisfy specific imports.
-                }
-=======
                 } 
                 // todo: satisfy specific imports?
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 
                 callback();
             });
@@ -1964,11 +1866,6 @@ function DefaultLoader(resourceLocation, env, resolveLoader) {
         return resourceLocation; // todo: should be relative
     };
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 loaders.DefaultLoader = DefaultLoader; // export DefaultLoader
 }(loaders));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/resolver.js
@@ -1976,15 +1873,10 @@ loaders.DefaultLoader = DefaultLoader; // export DefaultLoader
 
 
 
-<<<<<<< HEAD
-
-var resolvedLoaders = {};
-=======
 // TODO: this shouldn't be global!
 var resolvedLoaders = {};
 
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function resolveLoader(currentDir, importPath, env) {
     // split('!') and get prefix. Calculate absolute path.
     // note: should get loader by loaders map, key is path.
@@ -1994,11 +1886,6 @@ function resolveLoader(currentDir, importPath, env) {
     }
     return resolvedLoaders[resourceLocation];
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 utils.resolveLoader = resolveLoader; // export resolveLoader
 }(utils));
 var node = {};
@@ -2021,10 +1908,7 @@ var getSource = function (location, callback) {
         });
     };
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function prepareExports(env) {
     env.getSource = getSource;
     env.path = require('path');
@@ -2046,19 +1930,11 @@ function prepareExports(env) {
         }
     };
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 node.prepareExports = prepareExports; // export prepareExports
 }(node));
 // import /Users/anvaka/Documents/projects/impyjs/src/browser/app.js
 (function app_js(browser) {
-<<<<<<< HEAD
-=======
 /*global window */
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 
 
 
@@ -2066,18 +1942,12 @@ node.prepareExports = prepareExports; // export prepareExports
 
 
 
-<<<<<<< HEAD
-var getEntryPoint = function (env) {
-        var allScripts =  document.getElementsByTagName('script'),
-            entryPoint = allScripts[allScripts.length - 1].getAttribute('data-main'),
-=======
 var getCurrentScript = function () {
         var allScripts =  window.document.getElementsByTagName('script');
         return allScripts[allScripts.length - 1];
     },
     getEntryPoint = function (env) {
         var entryPoint = getCurrentScript().getAttribute('data-main'),
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
             port = window.location.port ? ':' + window.location.port : '',
             basePath = window.location.protocol + '//' + window.location.hostname + port + window.location.pathname;
 
@@ -2086,27 +1956,16 @@ var getCurrentScript = function () {
     },
 
     getSource = function (location, callback) {
-<<<<<<< HEAD
-        var r = new XMLHttpRequest(),
-            transferComplete = function (e) {
-                if (r.status < 200 || r.status > 299) {
-                    console.error('Bad response code (' + r.status + ') for ' + location +'. Make sure the file exists.');
-=======
         var r = new window.XMLHttpRequest(),
             transferComplete = function (e) {
                 if (r.status < 200 || r.status > 299) {
                     window.console.error('Bad response code (' + r.status + ') for ' + location + '. Make sure the file exists.');
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
                     // exception?
                 }
                 callback(this.responseText);
             },
             transferFailed = function (e) {
-<<<<<<< HEAD
-                console.error('Failed to load ' + location);
-=======
                 window.console.error('Failed to load ' + location);
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
                 throw e;
             };
 
@@ -2117,16 +1976,6 @@ var getCurrentScript = function () {
         r.send();
     };
 
-<<<<<<< HEAD
-function prepareExports (env) {
-    env.path = browser.path;
-    env.entryPoint = getEntryPoint(env);
-    env.getSource = getSource;
-
-    return {
-        load : function (file, loadedCallback) {
-            var loader = utils.resolveLoader(env.path.dirname(document.URL), file, env);
-=======
 
 function prepareExports(env) {
     env.path = browser.path;
@@ -2137,29 +1986,18 @@ function prepareExports(env) {
     return {
         load : function (file, loadedCallback) {
             var loader = utils.resolveLoader(env.path.dirname(window.document.URL), file, env);
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
             env.codeGenerator = new utils.CodeGenerator(env);
             loader.load(function () {
                 var topModule = loader.getDefinition();
                 env.codeGenerator.setPackageName(topModule.packageName);
-<<<<<<< HEAD
-                utils.printCode(env);
-                if (typeof loadedCallback === 'function') { loadedCallback(topModule); }
-=======
                 var result = utils.printCode(env);
                 if (typeof loadedCallback === 'function') {
                     loadedCallback(topModule, result);
                 }
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
             });
         }
     };
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 browser.prepareExports = prepareExports; // export prepareExports
 }(browser));
 // import /Users/anvaka/Documents/projects/impyjs/src/main.js

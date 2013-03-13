@@ -5,11 +5,7 @@ function isArray(obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }
 
-<<<<<<< HEAD
-/* export CodeGenerator */
-=======
 /* export */
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function CodeGenerator(env) {
     this.env = env;
     this.code = [];
@@ -27,11 +23,7 @@ function CodeGenerator(env) {
         "    } else if (typeof exports !== 'undefined') {",
         "        factory(exports);",
         "    } else {",
-<<<<<<< HEAD
-        "        factory({});",
-=======
         "        return factory({});",
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         "    }",
         "}(this, function (exports) {"]);
 
@@ -42,11 +34,7 @@ CodeGenerator.prototype.setPackageName = function (packageName) {
     if (packageName) {
         // <ugly>replace in UMD header the package name export for the browser 
         // environments </ugly>
-<<<<<<< HEAD
-        this.code[10] = '        factory((root.' + packageName + ' = {}));';
-=======
         this.code[10] = '        return factory((root.' + packageName + ' = {}));';
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
         this.fileName = packageName + '.js';
         this.sourceMap._fileName = this.fileName;
     }
@@ -56,23 +44,17 @@ CodeGenerator.prototype.getFileName = function () {
     return this.fileName;
 };
 CodeGenerator.prototype.getCode = function () {
-<<<<<<< HEAD
-    return this.code.join('\n') + '}));'; // end of UMD
-=======
     var exposedNamespaces = '';
     if (this.env.exposeNamespace) {
         exposedNamespaces = '\nreturn ' + this.getExposedNamespaces() + ';\n';
     }
     return this.code.join('\n') + exposedNamespaces + '}));'; // end of UMD
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 };
 
 CodeGenerator.prototype.getSourceMap = function () {
     return this.sourceMap.toString();
 };
 
-<<<<<<< HEAD
-=======
 CodeGenerator.prototype.getExposedNamespaces = function () {
     var namespaces = [],
         key;
@@ -88,7 +70,6 @@ CodeGenerator.prototype.getExposedNamespaces = function () {
     return '';
 };
 
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {
     var env = this.env,
         exports = moduleDef.exports,

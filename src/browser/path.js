@@ -18,10 +18,7 @@ var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
         };
     };
 
-<<<<<<< HEAD
-=======
 /* export */
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 var path = {
     /**
      * Based on a given web resource address returns a 'directory' name
@@ -92,10 +89,4 @@ var path = {
     },
 
     root : ''
-<<<<<<< HEAD
 };
-
-/* export path */
-=======
-};
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7

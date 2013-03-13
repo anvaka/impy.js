@@ -1,9 +1,6 @@
 /* namespace utils */
 /* import '../model/moduleDef.js' */
 
-<<<<<<< HEAD
-/* export parseModule */
-=======
 function getNextDeclaration(jsFile, startFrom) {
     // this is dumb, but hey, I don't want to create
     // AST parser here. Who knows, maybe I'll change current approach
@@ -24,20 +21,10 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
 }
 
 /* export */
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
         declarationType,
         importDefinition,
-<<<<<<< HEAD
-        re = /\/\*\s*(import|public export|export|namespace|package)\s+(.+?);?\s*?\*\//g;
-
-    //while(match = re.exec(jsFile)) {
-    moduleDef.code = jsFile.replace(re, function (match, declarationType, declaration, pos) {
-        if (declarationType === 'import') {
-            moduleDef.addImportDef(declaration);
-        } else if (declarationType === 'export') {
-=======
         re = /\/\*\s*(import|public export|export|namespace|package)\b(.*);?\s*?\*\//g;
 
     moduleDef.code = jsFile.replace(re, function (match, declarationType, declaration, pos) {
@@ -54,7 +41,6 @@ function parseModule(jsFile) {
                 err.message = getDiagnosticMissingExport(jsFile, match, pos);
                 throw err;
             }
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
             moduleDef.addExportDef(declaration);
         } else if (declarationType === 'namespace') {
             moduleDef.setNamespace(declaration);
@@ -68,9 +54,5 @@ function parseModule(jsFile) {
         return '';
     });
 
-<<<<<<< HEAD
-    // moduleDef.code = jsFile;
-=======
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
     return moduleDef;
 }

@@ -3,10 +3,7 @@
 /* import 'importDef.js' */
 /* import 'exportDef.js' */
 
-<<<<<<< HEAD
-=======
 /* export */
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
 function ModuleDef() {
     this.code = '';
     this.imports = [];
@@ -52,10 +49,4 @@ function ModuleDef() {
     this.setPackage = function(packageDecl) {
         this.packageName = packageDecl.replace(/\s/g, '');
     };
-<<<<<<< HEAD
 }
-
-/* export ModuleDef */
-=======
-}
->>>>>>> 6eee4886a37c1bbda9bd546e74be413e7aa3bcf7
