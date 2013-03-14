@@ -81,7 +81,7 @@ When developing your code with impy each file of your project is shown as a sepa
 
 ![Debugging by files](https://raw.github.com/anvaka/impy.js/master/docs/assets/impy_files.png)
 
-Impy generates source maps on the fly and provides it to the browser.
+Impy generates source maps on the fly and provides them to the browser.
 
 Awesome unit testing experience
 -------------------------------

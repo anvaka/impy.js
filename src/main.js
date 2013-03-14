@@ -1,7 +1,5 @@
 /* package impyjs */
 
-/* import '../libs/sourcemap.js' */
-
 /* import 'node/app.js' */
 /* import 'browser/app.js' */
 /* import 'version.js' */
