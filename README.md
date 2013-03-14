@@ -1,6 +1,7 @@
 impy.js
 =======
 
+<img src="https://raw.github.com/anvaka/impy.js/master/docs/assets/impy.png" align="right"></img>
 This is my attempt to make development of my next application fast and easy. The library allows you to organize your code nicely into separate files. When debugging your code within the browser each file appears as a separate resource in the dev tools. Once you are done developing, you can compile the code and have just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation result has no dependency on impy.js, and is absolutely valid module in CJS/AMD/Browser worlds. Let's see these features in more details.
 
 Example
