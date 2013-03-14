@@ -18,7 +18,7 @@ var impyjs = {};
 
 
 
-var version = '0.0.1.2';
+var version = '0.0.1.3';
 impyjs.version = version; // export version
 }(impyjs));
 var utils = {};
@@ -1534,6 +1534,7 @@ function CodeGenerator(env) {
         "}(this, function (exports) {"]);
 
     this.registeredNamespaces = {};
+    this.moduleGlobals = {};
 }
 
 CodeGenerator.prototype.setPackageName = function (packageName) {
@@ -1562,16 +1563,21 @@ CodeGenerator.prototype.getSourceMap = function () {
 };
 
 CodeGenerator.prototype.getExposedNamespaces = function () {
-    var namespaces = [],
+    var exposedCode = [],
         key;
     for (key in this.registeredNamespaces) {
         if (this.registeredNamespaces.hasOwnProperty(key)) {
             // todo: dots?
-            namespaces.push(key + ': ' + key);
+            exposedCode.push(key + ': ' + key);
         }
     }
-    if (namespaces.length) {
-        return '{' + namespaces.join(',') + '}';
+    for (key in this.moduleGlobals) {
+        if (this.moduleGlobals.hasOwnProperty(key)) {
+            exposedCode.push(key + ': ' + key);
+        }
+    }
+    if (exposedCode.length) {
+        return '{' + exposedCode.join(',') + '}';
     }
     return '';
 };
@@ -1616,20 +1622,30 @@ CodeGenerator.prototype.printModuleGlobalCode = function(moduleDef, fileName, ex
     if (exportedVariables.length) {
         code.push('var ' + exportedVariables.join(', ') + ';');
         code.push('(function (__localScope__) {');
-        for (i = 0; i < exports.length; ++i) {
-            code.push('  ' + exports[i] + ' = ' + '__localScope__.' + exports[i] + ';');
+        for (i = 0; i < exportedVariables.length; ++i) {
+            if (this.moduleGlobals.hasOwnProperty(exportedVariables[i])) {
+                var err = new Error();
+                err.message = 'Exported variable ' + exportedVariables[i] + ' was already declared in ' + this.moduleGlobals[exportedVariables[i]];
+                throw err;
+            } else {
+                this.moduleGlobals[exportedVariables[i]] = fileName;
+            }
+            code.push('  ' + exportedVariables[i] + ' = ' + '__localScope__.' + exportedVariables[i] + ';');
         }
         code.push('}(function ' + expressionName + '() {');
     } else {
         code.push('(function ' + expressionName + '() {');
     }
     this.addServiceCode(code);
+
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
+    
     code.length = 0;
     if (exportedVariables.length) {
         code.push('return { ');
-        for (i = 0; i < exports.length; ++i) {
-            returnStatement.push(' ' + exports[i] + ' : ' + exports[i]);
+        for (i = 0; i < exportedVariables.length; ++i) {
+            returnStatement.push(' ' + exportedVariables[i] + ' : ' + exportedVariables[i]);
         }
         code.push(returnStatement.join(','));
         code.push('};');
@@ -1647,6 +1663,7 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     this.addServiceCode('(function ' + expressionName + '(' + namespace + ') {');
 
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
 
     for (i = 0; i < exports.length; ++i) {
         var exportName = exports[i].exportDeclaration;
@@ -1655,6 +1672,16 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     }
 
     this.addServiceCode('}(' + namespace + '));');
+};
+
+CodeGenerator.prototype.addPublicExports = function(moduleDef, fileName) {
+    var publicExports = moduleDef.publicExports,
+        i;
+    for (i = 0; i < publicExports.length; ++i) {
+        var declaration = publicExports[i].exportDeclaration;
+        var code = declaration.split('.');    
+        this.addServiceCode('exports.' + code[code.length - 1] + ' = ' + declaration + ';');
+    }
 };
 
 CodeGenerator.prototype.addServiceCode = function (code) {
@@ -1698,6 +1725,17 @@ utils.CodeGenerator = CodeGenerator; // export CodeGenerator
 }(utils));
 var model = {};
 
+// import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
+(function exportDef_js(model) {
+
+
+
+function ExportDef(exportDeclaration) {
+    // todo: validate
+    this.exportDeclaration = exportDeclaration;
+}
+model.ExportDef = ExportDef; // export ExportDef
+}(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/importDef.js
 (function importDef_js(model) {
 
@@ -1726,17 +1764,6 @@ function ImportDef(importDeclaration) {
 }
 model.ImportDef = ImportDef; // export ImportDef
 }(model));
-// import /Users/anvaka/Documents/projects/impyjs/src/model/exportDef.js
-(function exportDef_js(model) {
-
-
-
-function ExportDef(exportDeclaration) {
-    // todo: validate
-    this.exportDeclaration = exportDeclaration;
-}
-model.ExportDef = ExportDef; // export ExportDef
-}(model));
 // import /Users/anvaka/Documents/projects/impyjs/src/model/moduleDef.js
 (function moduleDef_js(model) {
 
@@ -1749,6 +1776,7 @@ function ModuleDef() {
     this.code = '';
     this.imports = [];
     this.exports = [];
+    this.publicExports = [];
 
     var self = this;
     this.resolveImports = function (callback) {
@@ -1777,6 +1805,9 @@ function ModuleDef() {
         // TODO: Duplicates?
         this.exports.push(new model.ExportDef(exportDef));
     };
+    this.addPublicExportDef = function (publicExportDef) {
+        this.publicExports.push(new model.ExportDef(publicExportDef));
+    };
     this.setNamespace = function (namespaceDecl) {
         // todo: validate, throw error if already defined, reserved words.
         this.namepsace = namespaceDecl;
@@ -1798,7 +1829,7 @@ model.ModuleDef = ModuleDef; // export ModuleDef
 
 
 
-function getNextDeclaration(jsFile, startFrom) {
+function getNextVariable(jsFile, startFrom) {
     // this is dumb, but hey, I don't want to create
     // AST parser here. Who knows, maybe I'll change current approach
     // to implicit exports :). Don't want to waste too much time now,
@@ -1817,6 +1848,19 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
             jsFile.substring(startFrom, 100)].join('\n');
 }
 
+function getExportName(declaration, jsFile, match, pos) {
+    if (declaration === '') {
+        // implicit declaration, read file to find bound variable:
+        return getNextVariable(jsFile, pos + match.length);
+    }
+    if (!declaration) {
+        var err = new Error();
+        err.message = getDiagnosticMissingExport(jsFile, match, pos);
+        throw err;
+    }
+    return declaration;
+}
+
 
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
@@ -1829,24 +1873,15 @@ function parseModule(jsFile) {
         if (declarationType === 'import') {
             moduleDef.addImportDef(declaration);
         } else if (declarationType === 'export') {
-            if (declaration === '') {
-                // implicit declaration, read file to find bound variable:
-                declaration = getNextDeclaration(jsFile, pos + match.length);
-            }
-            if (!declaration) {
-                var err = new Error();
-                err.message = getDiagnosticMissingExport(jsFile, match, pos);
-                throw err;
-            }
+            declaration = getExportName(declaration, jsFile, match, pos);
             moduleDef.addExportDef(declaration);
         } else if (declarationType === 'namespace') {
             moduleDef.setNamespace(declaration);
         } else if (declarationType === 'package') {
             moduleDef.setPackage(declaration);
         } else if (declarationType === 'public export') {
-            // this shouldn't be here, but in the codegen.js
-            var code = declaration.split('.');
-            return 'exports.' + code[code.length - 1] + ' = ' + declaration + ';';
+            declaration = getExportName(declaration, jsFile, match, pos);
+            moduleDef.addPublicExportDef(declaration);
         }
         return '';
     });
@@ -2076,5 +2111,6 @@ if (env.entryPoint) { // load the first script, if environment has it.
 }
 
 // TODO: I'm still playing with library exports. This part may be changed:
+
 exports.load = impyAPI.load;
 }());}));

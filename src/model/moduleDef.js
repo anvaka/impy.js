@@ -8,6 +8,7 @@ function ModuleDef() {
     this.code = '';
     this.imports = [];
     this.exports = [];
+    this.publicExports = [];
 
     var self = this;
     this.resolveImports = function (callback) {
@@ -35,6 +36,9 @@ function ModuleDef() {
     this.addExportDef = function (exportDef) {
         // TODO: Duplicates?
         this.exports.push(new model.ExportDef(exportDef));
+    };
+    this.addPublicExportDef = function (publicExportDef) {
+        this.publicExports.push(new model.ExportDef(publicExportDef));
     };
     this.setNamespace = function (namespaceDecl) {
         // todo: validate, throw error if already defined, reserved words.

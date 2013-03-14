@@ -132,7 +132,10 @@ CodeGenerator.prototype.printModuleGlobalCode = function(moduleDef, fileName, ex
         code.push('(function ' + expressionName + '() {');
     }
     this.addServiceCode(code);
+
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
+    
     code.length = 0;
     if (exportedVariables.length) {
         code.push('return { ');
@@ -155,6 +158,7 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     this.addServiceCode('(function ' + expressionName + '(' + namespace + ') {');
 
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
 
     for (i = 0; i < exports.length; ++i) {
         var exportName = exports[i].exportDeclaration;
@@ -163,6 +167,16 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     }
 
     this.addServiceCode('}(' + namespace + '));');
+};
+
+CodeGenerator.prototype.addPublicExports = function(moduleDef, fileName) {
+    var publicExports = moduleDef.publicExports,
+        i;
+    for (i = 0; i < publicExports.length; ++i) {
+        var declaration = publicExports[i].exportDeclaration;
+        var code = declaration.split('.');    
+        this.addServiceCode('exports.' + code[code.length - 1] + ' = ' + declaration + ';');
+    }
 };
 
 CodeGenerator.prototype.addServiceCode = function (code) {

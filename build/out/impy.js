@@ -11,16 +11,12 @@
         return factory((root.impyjs = {}));
     }
 }(this, function (exports) {
-var impyjs = {};
-
 // import /Users/anvaka/Documents/projects/impyjs/src/version.js
-(function version_js(impyjs) {
+(function version_js() {
 
-
-
-var version = '0.0.1.2';
-impyjs.version = version; // export version
-}(impyjs));
+var version = '0.0.1.3';
+exports.version = version;
+}());
 var utils = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
@@ -1637,7 +1633,10 @@ CodeGenerator.prototype.printModuleGlobalCode = function(moduleDef, fileName, ex
         code.push('(function ' + expressionName + '() {');
     }
     this.addServiceCode(code);
+
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
+    
     code.length = 0;
     if (exportedVariables.length) {
         code.push('return { ');
@@ -1660,6 +1659,7 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     this.addServiceCode('(function ' + expressionName + '(' + namespace + ') {');
 
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
 
     for (i = 0; i < exports.length; ++i) {
         var exportName = exports[i].exportDeclaration;
@@ -1668,6 +1668,16 @@ CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expr
     }
 
     this.addServiceCode('}(' + namespace + '));');
+};
+
+CodeGenerator.prototype.addPublicExports = function(moduleDef, fileName) {
+    var publicExports = moduleDef.publicExports,
+        i;
+    for (i = 0; i < publicExports.length; ++i) {
+        var declaration = publicExports[i].exportDeclaration;
+        var code = declaration.split('.');    
+        this.addServiceCode('exports.' + code[code.length - 1] + ' = ' + declaration + ';');
+    }
 };
 
 CodeGenerator.prototype.addServiceCode = function (code) {
@@ -1762,6 +1772,7 @@ function ModuleDef() {
     this.code = '';
     this.imports = [];
     this.exports = [];
+    this.publicExports = [];
 
     var self = this;
     this.resolveImports = function (callback) {
@@ -1790,6 +1801,9 @@ function ModuleDef() {
         // TODO: Duplicates?
         this.exports.push(new model.ExportDef(exportDef));
     };
+    this.addPublicExportDef = function (publicExportDef) {
+        this.publicExports.push(new model.ExportDef(publicExportDef));
+    };
     this.setNamespace = function (namespaceDecl) {
         // todo: validate, throw error if already defined, reserved words.
         this.namepsace = namespaceDecl;
@@ -1811,7 +1825,7 @@ model.ModuleDef = ModuleDef; // export ModuleDef
 
 
 
-function getNextDeclaration(jsFile, startFrom) {
+function getNextVariable(jsFile, startFrom) {
     // this is dumb, but hey, I don't want to create
     // AST parser here. Who knows, maybe I'll change current approach
     // to implicit exports :). Don't want to waste too much time now,
@@ -1830,6 +1844,19 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
             jsFile.substring(startFrom, 100)].join('\n');
 }
 
+function getExportName(declaration, jsFile, match, pos) {
+    if (declaration === '') {
+        // implicit declaration, read file to find bound variable:
+        return getNextVariable(jsFile, pos + match.length);
+    }
+    if (!declaration) {
+        var err = new Error();
+        err.message = getDiagnosticMissingExport(jsFile, match, pos);
+        throw err;
+    }
+    return declaration;
+}
+
 
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
@@ -1842,24 +1869,15 @@ function parseModule(jsFile) {
         if (declarationType === 'import') {
             moduleDef.addImportDef(declaration);
         } else if (declarationType === 'export') {
-            if (declaration === '') {
-                // implicit declaration, read file to find bound variable:
-                declaration = getNextDeclaration(jsFile, pos + match.length);
-            }
-            if (!declaration) {
-                var err = new Error();
-                err.message = getDiagnosticMissingExport(jsFile, match, pos);
-                throw err;
-            }
+            declaration = getExportName(declaration, jsFile, match, pos);
             moduleDef.addExportDef(declaration);
         } else if (declarationType === 'namespace') {
             moduleDef.setNamespace(declaration);
         } else if (declarationType === 'package') {
             moduleDef.setPackage(declaration);
         } else if (declarationType === 'public export') {
-            // this shouldn't be here, but in the codegen.js
-            var code = declaration.split('.');
-            return 'exports.' + code[code.length - 1] + ' = ' + declaration + ';';
+            declaration = getExportName(declaration, jsFile, match, pos);
+            moduleDef.addPublicExportDef(declaration);
         }
         return '';
     });
@@ -2089,5 +2107,6 @@ if (env.entryPoint) { // load the first script, if environment has it.
 }
 
 // TODO: I'm still playing with library exports. This part may be changed:
+
 exports.load = impyAPI.load;
 }());}));
