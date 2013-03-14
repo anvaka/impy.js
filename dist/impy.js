@@ -11,6 +11,157 @@
         return factory((root.impyjs = {}));
     }
 }(this, function (exports) {
+// import /Users/anvaka/Documents/projects/impyjs/src/version.js
+(function version_js() {
+
+var version = '0.0.1.3';
+exports.version = version;
+}());
+var utils = {};
+
+// import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
+(function printer_js(utils) {
+
+if (typeof window === 'undefined') {
+    var btoa = function (str) {
+        return new Buffer(str, 'binary').toString('base64');
+    };
+} else {
+    var btoa = window.btoa;
+}
+
+
+function printCode(env) {
+    var code = env.codeGenerator.getCode();
+    if (env.printSourceMap || !env.onlyPrint) {
+        // always print the source map when running app
+        // otherwise it's configurable by client
+        code += ['',
+            '//@ sourceURL=' + env.codeGenerator.getFileName(),
+            '//@ sourceMappingURL=data:text/javascript;base64,' + btoa(env.codeGenerator.getSourceMap())
+            ].join('\n');
+    }
+    if (env.onlyPrint) {
+        console.log(code);
+    } else {
+        /*jslint evil: true */
+        try {
+            return (0, eval)(code);
+        } catch(e) {
+            // todo: should resolve to original source code
+            var errorName = ('name' in e ? e.name : 'Error'),
+                debugMessage = errorName + ' occured';
+            if ('lineNumber' in e) {
+                debugMessage += ':' + e.lineNumber;
+            }
+            if ('message' in e) {
+                debugMessage += ': ' + e.message;
+            }
+            console.error(debugMessage);
+            throw e;
+        }        
+    }
+}
+utils.printCode = printCode; // export printCode
+}(utils));
+var browser = {};
+
+// import /Users/anvaka/Documents/projects/impyjs/src/browser/path.js
+(function path_js(browser) {
+/*jslint regexp: true sloppy: true white: true plusplus: true*/
+
+
+var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
+    split = function (address) {
+        var match = address.match(re_porotocol_domain_path_args);
+        if (match) {
+            return {
+                domain: match[1] || '',
+                path: match[2] || '',
+                args: match[3] || ''
+            };
+        }
+        return {
+            domain: '',
+            path: '',
+            args: ''
+        };
+    };
+
+
+var path = {
+    /**
+     * Based on a given web resource address returns a 'directory' name
+     * where resource is located.
+     */
+    dirname : function (path) {
+        if (!path) {
+            return '';
+        }
+        var parts = split(path),
+            lastSlash;
+        path = parts.path;
+        lastSlash = path.lastIndexOf('/');
+        if (lastSlash > 0) {
+            path = path.substr(0, lastSlash);
+        }
+        if (lastSlash === 0) {
+            path = '';
+        }
+        return parts.domain + path + '/';
+    },
+    /**
+     * Resolves to to an absolute path with a from as a current dir.
+     */
+    resolve : function (from, to) {
+        if (!to) {
+            return from;
+        }
+        if (to.indexOf('//') !== -1) {
+            return to; // assume it's a uri.
+        }
+
+        var parts = to.split('/'),
+            base = split(from),
+            basePathRaw = base.path.split('/'),
+            basePath = [],
+            i, n, part;
+        for (i = 0, n = basePathRaw.length; i < n; ++i) {
+            if (basePathRaw[i]) {
+                basePath.push(basePathRaw[i]);
+            }
+        }
+        if (to[0] === '/') {
+            return this.root + to;
+        }
+        for(i = 0, n = parts.length; i < n; ++i) {
+            part = parts[i];
+            if (part === '..') {
+                if (basePath.length > 0) {
+                    basePath.pop();
+                } else {
+                    throw 'Error while resolving ' + from + '+' + to + ': Relative path is out of the site root folder';
+                }
+            } else if (part !== '.') {
+                basePath.push(part);
+            }
+        }
+        
+        return base.domain + '/' + basePath.join('/');
+    },
+
+    /**
+     * Returns the last portion of a path.
+     */
+    basename: function (address) {
+        var path = split(address).path;
+        return path.substr(path.lastIndexOf('/') + 1);
+    },
+
+    root : ''
+};
+browser.path = path; // export path
+}(browser));
 var sourcemap = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/libs/sourcemap.js
@@ -1346,66 +1497,10 @@ define('source-map/source-node', ['require', 'exports', 'module' ,  'source-map/
 var SourceMapGenerator = require('source-map/source-map-generator').SourceMapGenerator;
 sourcemap.SourceMapGenerator = SourceMapGenerator; // export SourceMapGenerator
 }(sourcemap));
-var impyjs = {};
-
-// import /Users/anvaka/Documents/projects/impyjs/src/version.js
-(function version_js(impyjs) {
-
-
-
-var version = '0.0.1.2';
-impyjs.version = version; // export version
-}(impyjs));
-var utils = {};
-
-// import /Users/anvaka/Documents/projects/impyjs/src/utils/printer.js
-(function printer_js(utils) {
-
-if (typeof window === 'undefined') {
-    var btoa = function (str) {
-        return new Buffer(str, 'binary').toString('base64');
-    };
-} else {
-    var btoa = window.btoa;
-}
-
-
-function printCode(env) {
-    var code = env.codeGenerator.getCode();
-    if (env.printSourceMap || !env.onlyPrint) {
-        // always print the source map when running app
-        // otherwise it's configurable by client
-        code += ['',
-            '//@ sourceURL=' + env.codeGenerator.getFileName(),
-            '//@ sourceMappingURL=data:text/javascript;base64,' + btoa(env.codeGenerator.getSourceMap())
-            ].join('\n');
-    }
-    if (env.onlyPrint) {
-        console.log(code);
-    } else {
-        /*jslint evil: true */
-        try {
-            return (0, eval)(code);
-        } catch(e) {
-            // todo: should resolve to original source code
-            var errorName = ('name' in e ? e.name : 'Error'),
-                debugMessage = errorName + ' occured';
-            if ('lineNumber' in e) {
-                debugMessage += ':' + e.lineNumber;
-            }
-            if ('message' in e) {
-                debugMessage += ': ' + e.message;
-            }
-            console.error(debugMessage);
-            throw e;
-        }        
-    }
-}
-utils.printCode = printCode; // export printCode
-}(utils));
 // import /Users/anvaka/Documents/projects/impyjs/src/utils/codeGen.js
 (function codeGen_js(utils) {
 /*global sourcemap */
+
 
 
 function isArray(obj) {
@@ -1435,6 +1530,7 @@ function CodeGenerator(env) {
         "}(this, function (exports) {"]);
 
     this.registeredNamespaces = {};
+    this.moduleGlobals = {};
 }
 
 CodeGenerator.prototype.setPackageName = function (packageName) {
@@ -1463,16 +1559,21 @@ CodeGenerator.prototype.getSourceMap = function () {
 };
 
 CodeGenerator.prototype.getExposedNamespaces = function () {
-    var namespaces = [],
+    var exposedCode = [],
         key;
     for (key in this.registeredNamespaces) {
         if (this.registeredNamespaces.hasOwnProperty(key)) {
             // todo: dots?
-            namespaces.push(key + ': ' + key);
+            exposedCode.push(key + ': ' + key);
         }
     }
-    if (namespaces.length) {
-        return '{' + namespaces.join(',') + '}';
+    for (key in this.moduleGlobals) {
+        if (this.moduleGlobals.hasOwnProperty(key)) {
+            exposedCode.push(key + ': ' + key);
+        }
+    }
+    if (exposedCode.length) {
+        return '{' + exposedCode.join(',') + '}';
     }
     return '';
 };
@@ -1495,20 +1596,88 @@ CodeGenerator.prototype.addFile = function generateCode(moduleDef, fileName) {
     }
 
     this.addServiceCode('// import ' + fileName);
-    this.addServiceCode('(function ' + expressionName + '(' + namespace + ') {');
+
+    if (namespace) {
+        this.printNamespacedCode(moduleDef, fileName, expressionName);
+    } else {
+        this.printModuleGlobalCode(moduleDef, fileName, expressionName);
+    }
+};
+
+CodeGenerator.prototype.printModuleGlobalCode = function(moduleDef, fileName, expressionName) {
+// to export into the module global scope we declare the same variables in the module
+// scope when, using two IFFEs we set the variable values. This guaranties we
+// are not polluting the module's scope.
+    var exportedVariables = [], i,
+        code = [],
+        returnStatement = [],
+        exports = moduleDef.exports;
+    for (i = 0; i < exports.length; ++i) {
+        exportedVariables.push(exports[i].exportDeclaration);
+    }
+    if (exportedVariables.length) {
+        code.push('var ' + exportedVariables.join(', ') + ';');
+        code.push('(function (__localScope__) {');
+        for (i = 0; i < exportedVariables.length; ++i) {
+            if (this.moduleGlobals.hasOwnProperty(exportedVariables[i])) {
+                var err = new Error();
+                err.message = 'Exported variable ' + exportedVariables[i] + ' was already declared in ' + this.moduleGlobals[exportedVariables[i]];
+                throw err;
+            } else {
+                this.moduleGlobals[exportedVariables[i]] = fileName;
+            }
+            code.push('  ' + exportedVariables[i] + ' = ' + '__localScope__.' + exportedVariables[i] + ';');
+        }
+        code.push('}(function ' + expressionName + '() {');
+    } else {
+        code.push('(function ' + expressionName + '() {');
+    }
+    this.addServiceCode(code);
+
     this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
+    
+    code.length = 0;
+    if (exportedVariables.length) {
+        code.push('return { ');
+        for (i = 0; i < exportedVariables.length; ++i) {
+            returnStatement.push(' ' + exportedVariables[i] + ' : ' + exportedVariables[i]);
+        }
+        code.push(returnStatement.join(','));
+        code.push('};');
+        code.push('}()));');
+        this.addServiceCode(code);
+
+    } else {
+        this.addServiceCode('}());');
+    }
+};
+
+CodeGenerator.prototype.printNamespacedCode = function(moduleDef, fileName, expressionName) {
+    var namespace = moduleDef.getNamespace(),
+        exports = moduleDef.exports, i;
+    this.addServiceCode('(function ' + expressionName + '(' + namespace + ') {');
+
+    this.addClientCode(moduleDef.code, fileName);
+    this.addPublicExports(moduleDef, fileName);
 
     for (i = 0; i < exports.length; ++i) {
         var exportName = exports[i].exportDeclaration;
-        if (namespace) {
-            this.addServiceCode(namespace + '.' + exportName + ' = ' +
+        this.addServiceCode(namespace + '.' + exportName + ' = ' +
                       exportName + '; // export ' + exportName);
-        } else {
-            throw 'Module global exports are not implemented';
-        }
     }
 
     this.addServiceCode('}(' + namespace + '));');
+};
+
+CodeGenerator.prototype.addPublicExports = function(moduleDef, fileName) {
+    var publicExports = moduleDef.publicExports,
+        i;
+    for (i = 0; i < publicExports.length; ++i) {
+        var declaration = publicExports[i].exportDeclaration;
+        var code = declaration.split('.');    
+        this.addServiceCode('exports.' + code[code.length - 1] + ' = ' + declaration + ';');
+    }
 };
 
 CodeGenerator.prototype.addServiceCode = function (code) {
@@ -1541,7 +1710,7 @@ CodeGenerator.prototype.isNamespaceRegistered = function (namespace) {
     if (namespace) {
         return this.registeredNamespaces.hasOwnProperty(namespace);
     }
-    return true;
+    return true; // it's a module scope
 };
 
 CodeGenerator.prototype.registerNamespace = function (namespace) {
@@ -1550,104 +1719,6 @@ CodeGenerator.prototype.registerNamespace = function (namespace) {
 
 utils.CodeGenerator = CodeGenerator; // export CodeGenerator
 }(utils));
-var browser = {};
-
-// import /Users/anvaka/Documents/projects/impyjs/src/browser/path.js
-(function path_js(browser) {
-/*jslint regexp: true sloppy: true white: true plusplus: true*/
-
-
-var re_porotocol_domain_path_args = /(.*?\/\/[^\/]+)?(\/?[^#?]*)?([#?].+)?/,
-    split = function (address) {
-        var match = address.match(re_porotocol_domain_path_args);
-        if (match) {
-            return {
-                domain: match[1] || '',
-                path: match[2] || '',
-                args: match[3] || ''
-            };
-        }
-        return {
-            domain: '',
-            path: '',
-            args: ''
-        };
-    };
-
-
-var path = {
-    /**
-     * Based on a given web resource address returns a 'directory' name
-     * where resource is located.
-     */
-    dirname : function (path) {
-        if (!path) {
-            return '';
-        }
-        var parts = split(path),
-            lastSlash;
-        path = parts.path;
-        lastSlash = path.lastIndexOf('/');
-        if (lastSlash > 0) {
-            path = path.substr(0, lastSlash);
-        }
-        if (lastSlash === 0) {
-            path = '';
-        }
-        return parts.domain + path + '/';
-    },
-    /**
-     * Resolves to to an absolute path with a from as a current dir.
-     */
-    resolve : function (from, to) {
-        if (!to) {
-            return from;
-        }
-        if (to.indexOf('//') !== -1) {
-            return to; // assume it's a uri.
-        }
-
-        var parts = to.split('/'),
-            base = split(from),
-            basePathRaw = base.path.split('/'),
-            basePath = [],
-            i, n, part;
-        for (i = 0, n = basePathRaw.length; i < n; ++i) {
-            if (basePathRaw[i]) {
-                basePath.push(basePathRaw[i]);
-            }
-        }
-        if (to[0] === '/') {
-            return this.root + to;
-        }
-        for(i = 0, n = parts.length; i < n; ++i) {
-            part = parts[i];
-            if (part === '..') {
-                if (basePath.length > 0) {
-                    basePath.pop();
-                } else {
-                    throw 'Error while resolving ' + from + '+' + to + ': Relative path is out of the site root folder';
-                }
-            } else if (part !== '.') {
-                basePath.push(part);
-            }
-        }
-        
-        return base.domain + '/' + basePath.join('/');
-    },
-
-    /**
-     * Returns the last portion of a path.
-     */
-    basename: function (address) {
-        var path = split(address).path;
-        return path.substr(path.lastIndexOf('/') + 1);
-    },
-
-    root : ''
-};
-browser.path = path; // export path
-}(browser));
 var model = {};
 
 // import /Users/anvaka/Documents/projects/impyjs/src/model/importDef.js
@@ -1701,6 +1772,7 @@ function ModuleDef() {
     this.code = '';
     this.imports = [];
     this.exports = [];
+    this.publicExports = [];
 
     var self = this;
     this.resolveImports = function (callback) {
@@ -1729,6 +1801,9 @@ function ModuleDef() {
         // TODO: Duplicates?
         this.exports.push(new model.ExportDef(exportDef));
     };
+    this.addPublicExportDef = function (publicExportDef) {
+        this.publicExports.push(new model.ExportDef(publicExportDef));
+    };
     this.setNamespace = function (namespaceDecl) {
         // todo: validate, throw error if already defined, reserved words.
         this.namepsace = namespaceDecl;
@@ -1750,7 +1825,7 @@ model.ModuleDef = ModuleDef; // export ModuleDef
 
 
 
-function getNextDeclaration(jsFile, startFrom) {
+function getNextVariable(jsFile, startFrom) {
     // this is dumb, but hey, I don't want to create
     // AST parser here. Who knows, maybe I'll change current approach
     // to implicit exports :). Don't want to waste too much time now,
@@ -1769,6 +1844,19 @@ function getDiagnosticMissingExport(jsFile, exportDecl, startFrom) {
             jsFile.substring(startFrom, 100)].join('\n');
 }
 
+function getExportName(declaration, jsFile, match, pos) {
+    if (declaration === '') {
+        // implicit declaration, read file to find bound variable:
+        return getNextVariable(jsFile, pos + match.length);
+    }
+    if (!declaration) {
+        var err = new Error();
+        err.message = getDiagnosticMissingExport(jsFile, match, pos);
+        throw err;
+    }
+    return declaration;
+}
+
 
 function parseModule(jsFile) {
     var moduleDef = new model.ModuleDef(),
@@ -1781,24 +1869,15 @@ function parseModule(jsFile) {
         if (declarationType === 'import') {
             moduleDef.addImportDef(declaration);
         } else if (declarationType === 'export') {
-            if (declaration === '') {
-                // implicit declaration, read file to find bound variable:
-                declaration = getNextDeclaration(jsFile, pos + match.length);
-            }
-            if (!declaration) {
-                var err = new Error();
-                err.message = getDiagnosticMissingExport(jsFile, match, pos);
-                throw err;
-            }
+            declaration = getExportName(declaration, jsFile, match, pos);
             moduleDef.addExportDef(declaration);
         } else if (declarationType === 'namespace') {
             moduleDef.setNamespace(declaration);
         } else if (declarationType === 'package') {
             moduleDef.setPackage(declaration);
         } else if (declarationType === 'public export') {
-            // this shouldn't be here, but in the codegen.js
-            var code = declaration.split('.');
-            return 'exports.' + code[code.length - 1] + ' = ' + declaration + ';';
+            declaration = getExportName(declaration, jsFile, match, pos);
+            moduleDef.addPublicExportDef(declaration);
         }
         return '';
     });
@@ -2008,8 +2087,6 @@ browser.prepareExports = prepareExports; // export prepareExports
 
 
 
-
-
 var env = {
         isNode: (typeof process !== 'undefined'),
         onlyPrint: true,  // a switch: print program or run it?
@@ -2030,5 +2107,6 @@ if (env.entryPoint) { // load the first script, if environment has it.
 }
 
 // TODO: I'm still playing with library exports. This part may be changed:
+
 exports.load = impyAPI.load;
 }());}));
