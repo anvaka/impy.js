@@ -2,7 +2,18 @@ impy.js
 =======
 
 <img src="https://raw.github.com/anvaka/impy.js/master/docs/assets/impy.png" align="right"></img>
-This is my attempt to make development of my next application fast and easy. The library allows you to organize your code nicely into separate files. When debugging your code within the browser each file appears as a separate resource in the dev tools. Once you are done developing, you can compile the code and have just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation result has no dependency on impy.js, and is absolutely valid module in CJS/AMD/Browser worlds. Let's see these features in more details.
+This is my attempt to make development of my next application fast and easy.
+The library allows you to organize your code nicely into separate files. When
+debugging your code within the browser each file appears as a separate resource
+in the dev tools. Once you are done developing, you can compile the code and have
+just one file, wrapped in [UMD loader](https://github.com/umdjs/umd). Compilation
+result has no dependency on impy.js, and is absolutely valid module in
+CJS/AMD/Browser worlds. Let's see these features in more details.
+
+Update
+======
+
+Please use [browserify](http://browserify.org/) instead.
 
 Example
 -------
@@ -56,7 +67,7 @@ When you open this page in the browser impy.js resolves all dependencies and run
         function getLocalTime() {
           return (new Date()).toLocaleTimeString();
         }
-        
+
         util.getLocalTime = getLocalTime;
     }(util));
 
@@ -71,9 +82,9 @@ Namespaces is the way to organize internal code structure. As you can see from c
 In different programming languages the set of public library API is often known as a package, a module or an assembly. Impy provides two instructions to let you declare public API of your code:
 
 * ```/* package name */``` - by this ```name``` your code will go in the browser environment. (i.e. window.name will be your "window" into the library's public export).
-* ```/* public export foo */``` - makes variable ```foo``` part of the public API of your library. 
+* ```/* public export foo */``` - makes variable ```foo``` part of the public API of your library.
 
-You can see both of these directives being used in the impy itself: take a look at impy's [main.js](https://github.com/anvaka/impy.js/blob/master/src/main.js#L1) - the library goes by name ```impyjs```, and exports ```load``` function. Oh, yes, the impy is using itself to organize and compile its own code. 
+You can see both of these directives being used in the impy itself: take a look at impy's [main.js](https://github.com/anvaka/impy.js/blob/master/src/main.js#L1) - the library goes by name ```impyjs```, and exports ```load``` function. Oh, yes, the impy is using itself to organize and compile its own code.
 
 Development experience is at core
 ---------------------------------
@@ -109,6 +120,6 @@ Experimental Warning
 --------------------
 This library is highly experimental. My goal is to make a developer friendly environment, with a very concise API. Thus I may change it as I play with impy in my other projects.
 
-Have a feedback? 
+Have a feedback?
 ----------------
 I love it! Please do not hesitate to drop me a line and tell what you think: anvaka@gmail.com
